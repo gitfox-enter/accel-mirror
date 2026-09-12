@@ -95,6 +95,11 @@
       "date": "2026-09-12",
       "action": "strategy_change",
       "details": "v1.2.0: added scripts/accel-fetch.sh (smart fallback downloader) + .github/workflows/mirror-test.yml (weekly CI health monitor); tools category expanded 9 to 19 (apt/crates.io/homebrew/composer/rubygems/gradle/pypi/npm/maven); full test 102 mirrors, 68 updated, 30 failed; dockerhub.icu revived 0->98"
+    },
+    {
+      "date": "2026-09-12",
+      "action": "added",
+      "details": "添加腾讯云CCS镜像加速 mirror.ccs.tencentyun.com 至 docker_enterprise（score 50 未测）。实测：公网DNS解析失败（该域名无公网记录，官方定位腾讯云CVM内网专用），故标注内网专用。来源：军哥要求补全腾讯云加速地址 + 腾讯云官方文档确认。"
     }
   ],
   "mirrors": {
@@ -496,6 +501,17 @@
         "status": "active",
         "notes": "需注册阿里云账号获取个人加速器地址，每人独立URL",
         "usage": "登录 cr.console.aliyun.com → 容器镜像服务 → 镜像加速器 → 获取个人地址 → 填入 daemon.json"
+      },
+      {
+        "name": "腾讯云 CCS 镜像加速（内网专用）",
+        "url": "https://mirror.ccs.tencentyun.com",
+        "test_url": "https://mirror.ccs.tencentyun.com/v2/",
+        "score": 50,
+        "last_tested": null,
+        "test_time_ms": null,
+        "status": "active",
+        "notes": "腾讯云官方Docker镜像加速器，仅腾讯云服务器(CVM/TKE等)内网可用；公网DNS不可解析(mirror.ccs.tencentyun.com无公网记录)。官方文档：cloud.tencent.com/document/product/1207/45596。外部环境请勿依赖此源。",
+        "usage": "仅腾讯云服务器内：写入 /etc/docker/daemon.json 的 registry-mirrors，或 docker pull mirror.ccs.tencentyun.com/<image>:<tag>"
       }
     ],
     "github": [
