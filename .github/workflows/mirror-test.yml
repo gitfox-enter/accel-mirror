@@ -1,6 +1,8 @@
 name: Mirror Health Test
 
 on:
+  push:
+    branches: [main]
   schedule:
     # 每周日 22:00 UTC（北京时间周一 06:00）自动跑一次全量测速
     - cron: '0 22 * * 0'
