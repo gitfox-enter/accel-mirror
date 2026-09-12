@@ -16,9 +16,13 @@ accel-mirror/
 │   ├── mirrors.json             # Live mirror database (scores, status, metadata)
 │   ├── docker-mirrors-guide.md  # Docker acceleration detailed guide
 │   └── github-mirrors-guide.md  # GitHub acceleration detailed guide
-└── scripts/
-    ├── test_mirrors.sh          # Speed/availability testing (curl-based)
-    └── update_mirrors.py         # Score update & sorting (Python3)
+├── scripts/
+│   ├── test_mirrors.sh          # Speed/availability testing (curl-based)
+│   ├── update_mirrors.py        # Score update & sorting (Python3)
+│   └── accel-fetch.sh           # Auto-download with smart proxy selection + fallback
+└── .github/
+    └── workflows/
+        └── mirror-test.yml      # Weekly CI full-speed test (survival monitoring)
 ```
 
 ## How to Use This Skill
@@ -95,12 +99,23 @@ git config --global url."https://<best_proxy>/https://".insteadOf "https://githu
 # git config --global --unset url."https://<best_proxy>/https://".insteadOf
 ```
 
+For one-off file downloads (release assets / archive tarballs / raw files), prefer `scripts/accel-fetch.sh` — it auto-probes the top-scored prefix proxies, picks the fastest reachable one, and falls back on failure:
+
+```bash
+bash scripts/accel-fetch.sh https://github.com/user/repo/releases/download/v1.0/file.zip -o file.zip
+bash scripts/accel-fetch.sh --list   # show currently available prefix proxies
+```
+
 ### Phase 3c — Package manager mirrors
 
 Present relevant entries from the `tools` category:
 - npm: `npm config set registry https://registry.npmmirror.com`
 - pip: `pip install -i https://pypi.tuna.tsinghua.edu.cn/simple <package>`
 - Go: `go env -w GOPROXY=https://goproxy.cn,direct`
+- apt (Ubuntu/Debian): replace `archive.ubuntu.com` with the top-scored apt mirror
+- Homebrew: `export HOMEBREW_API_DOMAIN="https://mirrors.tuna.tsinghua.edu.cn/homebrew-bottles/api"` (see mirror notes)
+- Rust (crates.io): `export CARGO_REGISTRIES_CRATES_IO_PROTOCOL=sparse` + set rsproxy.cn sparse index
+- Composer / RubyGems / Gradle / Maven: set registry/base URL to the top-scored mirror for the region
 
 ### Phase 4 — Dynamic testing & sorting
 
@@ -119,6 +134,8 @@ The test script uses `curl` to time each mirror's response. The update script re
 score = max(0, round(100 - response_time_seconds * 2))
 ```
 Mirrors that fail (timeout / connection error) get score 0 and status `deprecated` after 3 consecutive failures.
+
+The repository also ships `.github/workflows/mirror-test.yml` — a weekly GitHub Actions run of the same full test that posts a health summary to the Actions page. **CI monitors survival only and never writes back scores**: GitHub's datacenter network differs from real user networks, so scoring must stay local (`test_mirrors.sh` → `update_mirrors.py`).
 
 ## Self-Evolution Protocol
 

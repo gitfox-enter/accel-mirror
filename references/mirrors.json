@@ -1,5 +1,5 @@
 {
-  "version": "1.1.0",
+  "version": "1.2.0",
   "last_updated": "2026-09-12",
   "last_full_test": "2026-09-12",
   "test_environment": "Home broadband NAS, jishuzhan.net 2025-06-15 community test",
@@ -35,10 +35,290 @@
       "date": "2026-09-12",
       "action": "tested",
       "details": "Updated scores: 32 mirrors updated, 13 failed"
+    },
+    {
+      "date": "2026-09-12",
+      "action": "added",
+      "details": "Added mirror 'apt (清华)' to tools (url: https://mirrors.tuna.tsinghua.edu.cn/ubuntu/, initial score: 99)"
+    },
+    {
+      "date": "2026-09-12",
+      "action": "added",
+      "details": "Added mirror 'apt (阿里)' to tools (url: https://mirrors.aliyun.com/ubuntu/, initial score: 99)"
+    },
+    {
+      "date": "2026-09-12",
+      "action": "added",
+      "details": "Added mirror 'crates.io (rsproxy)' to tools (url: https://rsproxy.cn, initial score: 99)"
+    },
+    {
+      "date": "2026-09-12",
+      "action": "added",
+      "details": "Added mirror 'Homebrew (清华)' to tools (url: https://mirrors.tuna.tsinghua.edu.cn/homebrew-bottles/, initial score: 91)"
+    },
+    {
+      "date": "2026-09-12",
+      "action": "added",
+      "details": "Added mirror 'Composer (阿里)' to tools (url: https://mirrors.aliyun.com/composer/, initial score: 99)"
+    },
+    {
+      "date": "2026-09-12",
+      "action": "added",
+      "details": "Added mirror 'RubyGems (清华)' to tools (url: https://mirrors.tuna.tsinghua.edu.cn/rubygems/, initial score: 99)"
+    },
+    {
+      "date": "2026-09-12",
+      "action": "added",
+      "details": "Added mirror 'Gradle (腾讯)' to tools (url: https://mirrors.cloud.tencent.com/gradle/, initial score: 99)"
+    },
+    {
+      "date": "2026-09-12",
+      "action": "added",
+      "details": "Added mirror 'pypi (阿里)' to tools (url: https://mirrors.aliyun.com/pypi/simple/, initial score: 80)"
+    },
+    {
+      "date": "2026-09-12",
+      "action": "added",
+      "details": "Added mirror 'npm (华为云)' to tools (url: https://mirrors.huaweicloud.com/repository/npm/, initial score: 99)"
+    },
+    {
+      "date": "2026-09-12",
+      "action": "added",
+      "details": "Added mirror 'Maven (腾讯)' to tools (url: https://mirrors.cloud.tencent.com/nexus/repository/maven-public/, initial score: 98)"
+    },
+    {
+      "date": "2026-09-12",
+      "action": "tested",
+      "details": "Updated scores: 68 mirrors updated, 30 failed"
+    },
+    {
+      "date": "2026-09-12",
+      "action": "strategy_change",
+      "details": "v1.2.0: added scripts/accel-fetch.sh (smart fallback downloader) + .github/workflows/mirror-test.yml (weekly CI health monitor); tools category expanded 9 to 19 (apt/crates.io/homebrew/composer/rubygems/gradle/pypi/npm/maven); full test 102 mirrors, 68 updated, 30 failed; dockerhub.icu revived 0->98"
     }
   ],
   "mirrors": {
     "docker_community": [
+      {
+        "name": "docker.1ms.run",
+        "url": "https://docker.1ms.run",
+        "test_url": "https://docker.1ms.run/v2/",
+        "score": 99,
+        "last_tested": "2026-09-12",
+        "test_time_ms": 547,
+        "status": "active",
+        "notes": "用户原始列表中的源"
+      },
+      {
+        "name": "docker.m.daocloud.io",
+        "url": "https://docker.m.daocloud.io",
+        "test_url": "https://docker.m.daocloud.io/v2/",
+        "score": 99,
+        "last_tested": "2026-09-12",
+        "test_time_ms": 480,
+        "status": "active",
+        "notes": "DaoCloud 官方镜像，稳定性较好，未参与2025-06实测"
+      },
+      {
+        "name": "dockerpull.cn",
+        "url": "https://dockerpull.cn",
+        "test_url": "https://dockerpull.cn/v2/",
+        "score": 99,
+        "last_tested": "2026-09-12",
+        "test_time_ms": 657,
+        "status": "active",
+        "notes": ""
+      },
+      {
+        "name": "docker.sparkcr.cn",
+        "url": "https://docker.sparkcr.cn",
+        "test_url": "https://docker.sparkcr.cn/v2/",
+        "score": 99,
+        "last_tested": "2026-09-12",
+        "test_time_ms": 488,
+        "status": "active",
+        "notes": "用户原始列表中的源，未测试"
+      },
+      {
+        "name": "hub.rat.dev",
+        "url": "https://hub.rat.dev",
+        "test_url": "https://hub.rat.dev/v2/",
+        "score": 98,
+        "last_tested": "2026-09-12",
+        "test_time_ms": 828,
+        "status": "active",
+        "notes": "用户原始列表中的源"
+      },
+      {
+        "name": "docker.apiba.cn",
+        "url": "https://docker.apiba.cn",
+        "test_url": "https://docker.apiba.cn/v2/",
+        "score": 98,
+        "last_tested": "2026-09-12",
+        "test_time_ms": 1141,
+        "status": "active",
+        "notes": ""
+      },
+      {
+        "name": "docker-0.unsee.tech",
+        "url": "https://docker-0.unsee.tech",
+        "test_url": "https://docker-0.unsee.tech/v2/",
+        "score": 98,
+        "last_tested": "2026-09-12",
+        "test_time_ms": 1168,
+        "status": "active",
+        "notes": "用户原始列表中的源"
+      },
+      {
+        "name": "docker-registry.nmqu.com",
+        "url": "https://docker-registry.nmqu.com",
+        "test_url": "https://docker-registry.nmqu.com/v2/",
+        "score": 98,
+        "last_tested": "2026-09-12",
+        "test_time_ms": 1179,
+        "status": "active",
+        "notes": ""
+      },
+      {
+        "name": "docker.xuanyuan.run",
+        "url": "https://docker.xuanyuan.run",
+        "test_url": "https://docker.xuanyuan.run/v2/",
+        "score": 98,
+        "last_tested": "2026-09-12",
+        "test_time_ms": 831,
+        "status": "active",
+        "notes": "轩辕镜像K8s/containerd场景用，与xuanyuan.me同体系"
+      },
+      {
+        "name": "dockerhub.icu",
+        "url": "https://dockerhub.icu",
+        "test_url": "https://dockerhub.icu/v2/",
+        "score": 98,
+        "last_tested": "2026-09-12",
+        "test_time_ms": 1115,
+        "status": "active",
+        "notes": "2026-09-13 测试不可用，已弃用"
+      },
+      {
+        "name": "hub.1panel.dev",
+        "url": "https://hub.1panel.dev",
+        "test_url": "https://hub.1panel.dev/v2/",
+        "score": 97,
+        "last_tested": "2026-09-12",
+        "test_time_ms": 1509,
+        "status": "active",
+        "notes": "1panel 系列备用域名"
+      },
+      {
+        "name": "dockercf.jsdelivr.fyi",
+        "url": "https://dockercf.jsdelivr.fyi",
+        "test_url": "https://dockercf.jsdelivr.fyi/v2/",
+        "score": 97,
+        "last_tested": "2026-09-12",
+        "test_time_ms": 1675,
+        "status": "active",
+        "notes": ""
+      },
+      {
+        "name": "dockerproxy.net",
+        "url": "https://dockerproxy.net",
+        "test_url": "https://dockerproxy.net/v2/",
+        "score": 97,
+        "last_tested": "2026-09-12",
+        "test_time_ms": 1417,
+        "status": "active",
+        "notes": "用户原始列表中的源，经典老牌"
+      },
+      {
+        "name": "docker.xuanyuan.me",
+        "url": "https://docker.xuanyuan.me",
+        "test_url": "https://docker.xuanyuan.me/v2/",
+        "score": 97,
+        "last_tested": "2026-09-12",
+        "test_time_ms": 1384,
+        "status": "active",
+        "notes": "轩辕镜像，境内合规运营，支持搜索镜像，Cloudflare+境内CDN"
+      },
+      {
+        "name": "docker.1panel.top",
+        "url": "https://docker.1panel.top",
+        "test_url": "https://docker.1panel.top/v2/",
+        "score": 97,
+        "last_tested": "2026-09-12",
+        "test_time_ms": 1321,
+        "status": "active",
+        "notes": "1panel 系列域名"
+      },
+      {
+        "name": "docker.jsdelivr.fyi",
+        "url": "https://docker.jsdelivr.fyi",
+        "test_url": "https://docker.jsdelivr.fyi/v2/",
+        "score": 97,
+        "last_tested": "2026-09-12",
+        "test_time_ms": 1673,
+        "status": "active",
+        "notes": ""
+      },
+      {
+        "name": "docker.367231.xyz",
+        "url": "https://docker.367231.xyz",
+        "test_url": "https://docker.367231.xyz/v2/",
+        "score": 97,
+        "last_tested": "2026-09-12",
+        "test_time_ms": 1485,
+        "status": "active",
+        "notes": ""
+      },
+      {
+        "name": "docker.kejilion.pro",
+        "url": "https://docker.kejilion.pro",
+        "test_url": "https://docker.kejilion.pro/v2/",
+        "score": 97,
+        "last_tested": "2026-09-12",
+        "test_time_ms": 1351,
+        "status": "active",
+        "notes": ""
+      },
+      {
+        "name": "dockertest.jsdelivr.fyi",
+        "url": "https://dockertest.jsdelivr.fyi",
+        "test_url": "https://dockertest.jsdelivr.fyi/v2/",
+        "score": 96,
+        "last_tested": "2026-09-12",
+        "test_time_ms": 2210,
+        "status": "active",
+        "notes": ""
+      },
+      {
+        "name": "lispy.org",
+        "url": "https://lispy.org",
+        "test_url": "https://lispy.org/v2/",
+        "score": 96,
+        "last_tested": "2026-09-12",
+        "test_time_ms": 1751,
+        "status": "active",
+        "notes": ""
+      },
+      {
+        "name": "docker.hlmirror.com",
+        "url": "https://docker.hlmirror.com",
+        "test_url": "https://docker.hlmirror.com/v2/",
+        "score": 96,
+        "last_tested": "2026-09-12",
+        "test_time_ms": 2154,
+        "status": "active",
+        "notes": ""
+      },
+      {
+        "name": "dytt.online",
+        "url": "https://dytt.online",
+        "test_url": "https://dytt.online/v2/",
+        "score": 95,
+        "last_tested": "2026-09-12",
+        "test_time_ms": 2606,
+        "status": "active",
+        "notes": ""
+      },
       {
         "name": "1panel.live",
         "url": "https://docker.1panel.live",
@@ -47,7 +327,8 @@
         "last_tested": "2025-06-15",
         "test_time_ms": 6440,
         "status": "active",
-        "notes": "2025-06实测最快社区源"
+        "notes": "2025-06实测最快社区源",
+        "consecutive_failures": 1
       },
       {
         "name": "hub3.nat.tf",
@@ -57,37 +338,8 @@
         "last_tested": "2025-06-15",
         "test_time_ms": 6800,
         "status": "active",
-        "notes": ""
-      },
-      {
-        "name": "dockertest.jsdelivr.fyi",
-        "url": "https://dockertest.jsdelivr.fyi",
-        "test_url": "https://dockertest.jsdelivr.fyi/v2/",
-        "score": 85,
-        "last_tested": "2025-06-15",
-        "test_time_ms": 7570,
-        "status": "active",
-        "notes": ""
-      },
-      {
-        "name": "dytt.online",
-        "url": "https://dytt.online",
-        "test_url": "https://dytt.online/v2/",
-        "score": 84,
-        "last_tested": "2025-06-15",
-        "test_time_ms": 8160,
-        "status": "active",
-        "notes": ""
-      },
-      {
-        "name": "hub.1panel.dev",
-        "url": "https://hub.1panel.dev",
-        "test_url": "https://hub.1panel.dev/v2/",
-        "score": 83,
-        "last_tested": "2025-06-15",
-        "test_time_ms": 8290,
-        "status": "active",
-        "notes": "1panel 系列备用域名"
+        "notes": "",
+        "consecutive_failures": 1
       },
       {
         "name": "image.cloudlayer.icu",
@@ -97,17 +349,8 @@
         "last_tested": "2025-06-15",
         "test_time_ms": 8300,
         "status": "active",
-        "notes": ""
-      },
-      {
-        "name": "lispy.org",
-        "url": "https://lispy.org",
-        "test_url": "https://lispy.org/v2/",
-        "score": 83,
-        "last_tested": "2025-06-15",
-        "test_time_ms": 8410,
-        "status": "active",
-        "notes": ""
+        "notes": "",
+        "consecutive_failures": 1
       },
       {
         "name": "dockerpull.pw",
@@ -117,17 +360,8 @@
         "last_tested": "2025-06-15",
         "test_time_ms": 9090,
         "status": "active",
-        "notes": "用户原始列表中的源"
-      },
-      {
-        "name": "hub.rat.dev",
-        "url": "https://hub.rat.dev",
-        "test_url": "https://hub.rat.dev/v2/",
-        "score": 81,
-        "last_tested": "2025-06-15",
-        "test_time_ms": 9350,
-        "status": "active",
-        "notes": "用户原始列表中的源"
+        "notes": "用户原始列表中的源",
+        "consecutive_failures": 1
       },
       {
         "name": "docker.yomansunter.com",
@@ -137,47 +371,8 @@
         "last_tested": "2025-06-15",
         "test_time_ms": 9570,
         "status": "active",
-        "notes": ""
-      },
-      {
-        "name": "docker.hlmirror.com",
-        "url": "https://docker.hlmirror.com",
-        "test_url": "https://docker.hlmirror.com/v2/",
-        "score": 81,
-        "last_tested": "2025-06-15",
-        "test_time_ms": 9620,
-        "status": "active",
-        "notes": ""
-      },
-      {
-        "name": "docker.apiba.cn",
-        "url": "https://docker.apiba.cn",
-        "test_url": "https://docker.apiba.cn/v2/",
-        "score": 81,
-        "last_tested": "2025-06-15",
-        "test_time_ms": 9680,
-        "status": "active",
-        "notes": ""
-      },
-      {
-        "name": "dockercf.jsdelivr.fyi",
-        "url": "https://dockercf.jsdelivr.fyi",
-        "test_url": "https://dockercf.jsdelivr.fyi/v2/",
-        "score": 81,
-        "last_tested": "2025-06-15",
-        "test_time_ms": 9710,
-        "status": "active",
-        "notes": ""
-      },
-      {
-        "name": "docker-0.unsee.tech",
-        "url": "https://docker-0.unsee.tech",
-        "test_url": "https://docker-0.unsee.tech/v2/",
-        "score": 80,
-        "last_tested": "2025-06-15",
-        "test_time_ms": 9760,
-        "status": "active",
-        "notes": "用户原始列表中的源"
+        "notes": "",
+        "consecutive_failures": 1
       },
       {
         "name": "docker.xiaogenban1993.com",
@@ -187,37 +382,8 @@
         "last_tested": "2025-06-15",
         "test_time_ms": 9830,
         "status": "active",
-        "notes": ""
-      },
-      {
-        "name": "docker-registry.nmqu.com",
-        "url": "https://docker-registry.nmqu.com",
-        "test_url": "https://docker-registry.nmqu.com/v2/",
-        "score": 80,
-        "last_tested": "2025-06-15",
-        "test_time_ms": 9870,
-        "status": "active",
-        "notes": ""
-      },
-      {
-        "name": "dockerproxy.net",
-        "url": "https://dockerproxy.net",
-        "test_url": "https://dockerproxy.net/v2/",
-        "score": 80,
-        "last_tested": "2025-06-15",
-        "test_time_ms": 9930,
-        "status": "active",
-        "notes": "用户原始列表中的源，经典老牌"
-      },
-      {
-        "name": "docker.xuanyuan.me",
-        "url": "https://docker.xuanyuan.me",
-        "test_url": "https://docker.xuanyuan.me/v2/",
-        "score": 80,
-        "last_tested": "2025-06-15",
-        "test_time_ms": 10110,
-        "status": "active",
-        "notes": "轩辕镜像，境内合规运营，支持搜索镜像，Cloudflare+境内CDN"
+        "notes": "",
+        "consecutive_failures": 1
       },
       {
         "name": "docker.amingg.com",
@@ -227,27 +393,8 @@
         "last_tested": "2025-06-15",
         "test_time_ms": 10150,
         "status": "active",
-        "notes": ""
-      },
-      {
-        "name": "docker.1ms.run",
-        "url": "https://docker.1ms.run",
-        "test_url": "https://docker.1ms.run/v2/",
-        "score": 79,
-        "last_tested": "2025-06-15",
-        "test_time_ms": 10710,
-        "status": "active",
-        "notes": "用户原始列表中的源"
-      },
-      {
-        "name": "docker.1panel.top",
-        "url": "https://docker.1panel.top",
-        "test_url": "https://docker.1panel.top/v2/",
-        "score": 77,
-        "last_tested": "2025-06-15",
-        "test_time_ms": 11410,
-        "status": "active",
-        "notes": "1panel 系列域名"
+        "notes": "",
+        "consecutive_failures": 1
       },
       {
         "name": "hub.littlediary.cn",
@@ -257,57 +404,8 @@
         "last_tested": "2025-06-15",
         "test_time_ms": 11860,
         "status": "active",
-        "notes": ""
-      },
-      {
-        "name": "docker.jsdelivr.fyi",
-        "url": "https://docker.jsdelivr.fyi",
-        "test_url": "https://docker.jsdelivr.fyi/v2/",
-        "score": 76,
-        "last_tested": "2025-06-15",
-        "test_time_ms": 11960,
-        "status": "active",
-        "notes": ""
-      },
-      {
-        "name": "docker.367231.xyz",
-        "url": "https://docker.367231.xyz",
-        "test_url": "https://docker.367231.xyz/v2/",
-        "score": 75,
-        "last_tested": "2025-06-15",
-        "test_time_ms": 12440,
-        "status": "active",
-        "notes": ""
-      },
-      {
-        "name": "docker.m.daocloud.io",
-        "url": "https://docker.m.daocloud.io",
-        "test_url": "https://docker.m.daocloud.io/v2/",
-        "score": 75,
-        "last_tested": null,
-        "test_time_ms": null,
-        "status": "active",
-        "notes": "DaoCloud 官方镜像，稳定性较好，未参与2025-06实测"
-      },
-      {
-        "name": "docker.kejilion.pro",
-        "url": "https://docker.kejilion.pro",
-        "test_url": "https://docker.kejilion.pro/v2/",
-        "score": 74,
-        "last_tested": "2025-06-15",
-        "test_time_ms": 12940,
-        "status": "active",
-        "notes": ""
-      },
-      {
-        "name": "dockerpull.cn",
-        "url": "https://dockerpull.cn",
-        "test_url": "https://dockerpull.cn/v2/",
-        "score": 72,
-        "last_tested": "2025-06-15",
-        "test_time_ms": 14120,
-        "status": "active",
-        "notes": ""
+        "notes": "",
+        "consecutive_failures": 1
       },
       {
         "name": "666860.xyz",
@@ -317,27 +415,8 @@
         "last_tested": "2025-06-15",
         "test_time_ms": 14960,
         "status": "active",
-        "notes": ""
-      },
-      {
-        "name": "docker.xuanyuan.run",
-        "url": "https://docker.xuanyuan.run",
-        "test_url": "https://docker.xuanyuan.run/v2/",
-        "score": 70,
-        "last_tested": null,
-        "test_time_ms": null,
-        "status": "active",
-        "notes": "轩辕镜像K8s/containerd场景用，与xuanyuan.me同体系"
-      },
-      {
-        "name": "docker.sparkcr.cn",
-        "url": "https://docker.sparkcr.cn",
-        "test_url": "https://docker.sparkcr.cn/v2/",
-        "score": 50,
-        "last_tested": null,
-        "test_time_ms": null,
-        "status": "active",
-        "notes": "用户原始列表中的源，未测试"
+        "notes": "",
+        "consecutive_failures": 1
       },
       {
         "name": "register.librax.org",
@@ -347,7 +426,8 @@
         "last_tested": null,
         "test_time_ms": null,
         "status": "active",
-        "notes": "用户原始列表中的源，未测试"
+        "notes": "用户原始列表中的源，未测试",
+        "consecutive_failures": 1
       },
       {
         "name": "docker-cf.registry.cyou",
@@ -357,7 +437,8 @@
         "last_tested": null,
         "test_time_ms": null,
         "status": "active",
-        "notes": "用户原始列表中的源，未测试"
+        "notes": "用户原始列表中的源，未测试",
+        "consecutive_failures": 1
       },
       {
         "name": "docker.wanpeng.top",
@@ -367,7 +448,8 @@
         "last_tested": null,
         "test_time_ms": null,
         "status": "active",
-        "notes": "腾讯云开发者文章提及，未测试"
+        "notes": "腾讯云开发者文章提及，未测试",
+        "consecutive_failures": 1
       },
       {
         "name": "hubp.me",
@@ -377,7 +459,8 @@
         "last_tested": "2025-06-15",
         "test_time_ms": 29310,
         "status": "active",
-        "notes": "测试时响应极慢"
+        "notes": "测试时响应极慢",
+        "consecutive_failures": 1
       },
       {
         "name": "docker-mirror.aigc2d.com",
@@ -387,17 +470,8 @@
         "last_tested": "2025-06-15",
         "test_time_ms": 37740,
         "status": "active",
-        "notes": "测试时响应极慢，谨慎使用"
-      },
-      {
-        "name": "dockerhub.icu",
-        "url": "https://dockerhub.icu",
-        "test_url": "https://dockerhub.icu/v2/",
-        "score": 0,
-        "last_tested": null,
-        "test_time_ms": null,
-        "status": "deprecated",
-        "notes": "2026-09-13 测试不可用，已弃用"
+        "notes": "测试时响应极慢，谨慎使用",
+        "consecutive_failures": 1
       }
     ],
     "docker_enterprise": [
@@ -405,9 +479,9 @@
         "name": "华为云 SWR ddn-k8s",
         "url": "https://swr.cn-north-4.myhuaweicloud.com/ddn-k8s/",
         "test_url": "https://swr.cn-north-4.myhuaweicloud.com/v2/",
-        "score": 95,
-        "last_tested": null,
-        "test_time_ms": null,
+        "score": 99,
+        "last_tested": "2026-09-12",
+        "test_time_ms": 457,
         "status": "active",
         "notes": "企业级稳定，免费，无需登录，走国内骨干网。需手动拼路径。",
         "usage": "docker pull swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/<image>:<tag> && docker tag swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/<image>:<tag> <image>:<tag>"
@@ -438,7 +512,7 @@
           "git config --global url.\"https://gitclone.com\".insteadOf https://",
           "git clone https://gitclone.com/github.com/user/repo.git"
         ],
-        "test_time_ms": 583
+        "test_time_ms": 628
       },
       {
         "name": "github.akams.cn",
@@ -452,7 +526,7 @@
         "usage_examples": [
           "git clone https://github.akams.cn/https://github.com/user/repo.git"
         ],
-        "test_time_ms": 461
+        "test_time_ms": 642
       },
       {
         "name": "toolwa.com/github",
@@ -466,7 +540,7 @@
         "usage_examples": [
           "访问 http://toolwa.com/github/ 粘贴仓库链接"
         ],
-        "test_time_ms": 333
+        "test_time_ms": 386
       },
       {
         "name": "gh.h233.eu.org",
@@ -480,21 +554,8 @@
         "usage_examples": [
           "wget https://gh.h233.eu.org/https://github.com/user/repo/releases/download/v1.0/file.zip"
         ],
-        "test_time_ms": 590
-      },
-      {
-        "name": "ghfile.geekertao.top",
-        "url": "https://ghfile.geekertao.top/",
-        "test_url": "https://ghfile.geekertao.top/",
-        "proxy_type": "prefix",
-        "score": 99,
-        "last_tested": "2026-09-12",
-        "status": "active",
-        "notes": "来自operit.app官网'自动选择加速'内置列表（2026-09-11提取），未实测",
-        "usage_examples": [
-          "wget https://ghfile.geekertao.top/https://github.com/user/repo/releases/download/v1.0/file.zip"
-        ],
-        "test_time_ms": 564
+        "test_time_ms": 590,
+        "consecutive_failures": 1
       },
       {
         "name": "bgithub.xyz",
@@ -509,7 +570,8 @@
           "git clone https://bgithub.xyz/user/repo.git",
           "浏览器访问 https://bgithub.xyz/user/repo"
         ],
-        "test_time_ms": 1195
+        "test_time_ms": 1195,
+        "consecutive_failures": 1
       },
       {
         "name": "gh-proxy.com",
@@ -523,7 +585,7 @@
         "usage_examples": [
           "git clone https://gh-proxy.com/https://github.com/user/repo.git"
         ],
-        "test_time_ms": 833
+        "test_time_ms": 901
       },
       {
         "name": "gh.con.sh",
@@ -537,7 +599,7 @@
         "usage_examples": [
           "wget https://gh.con.sh/https://github.com/user/repo/releases/download/v1.0/file.zip"
         ],
-        "test_time_ms": 842
+        "test_time_ms": 1202
       },
       {
         "name": "Ghfast (ghfast.top)",
@@ -552,21 +614,7 @@
           "git clone https://ghfast.top/https://github.com/user/repo.git",
           "wget https://ghfast.top/https://github.com/user/repo/releases/download/v1.0/file.zip"
         ],
-        "test_time_ms": 1197
-      },
-      {
-        "name": "GhProxy (ghproxy.com)",
-        "url": "https://ghproxy.com/",
-        "test_url": "https://ghproxy.com/",
-        "proxy_type": "prefix",
-        "score": 98,
-        "last_tested": "2026-09-12",
-        "status": "active",
-        "notes": "来自operit.app官网'自动选择加速'内置列表（2026-09-11提取），未实测",
-        "usage_examples": [
-          "git clone https://ghproxy.com/https://github.com/user/repo.git"
-        ],
-        "test_time_ms": 1171
+        "test_time_ms": 1247
       },
       {
         "name": "github.boki.moe",
@@ -580,21 +628,7 @@
         "usage_examples": [
           "git clone https://github.boki.moe/https://github.com/user/repo.git"
         ],
-        "test_time_ms": 1061
-      },
-      {
-        "name": "gh-proxy.net",
-        "url": "https://gh-proxy.net/",
-        "test_url": "https://gh-proxy.net/",
-        "proxy_type": "prefix",
-        "score": 98,
-        "last_tested": "2026-09-12",
-        "status": "active",
-        "notes": "来自operit.app官网'自动选择加速'内置列表（2026-09-11提取），注意与ghproxy.net是不同域名，未实测",
-        "usage_examples": [
-          "wget https://gh-proxy.net/https://github.com/user/repo/releases/download/v1.0/file.zip"
-        ],
-        "test_time_ms": 1234
+        "test_time_ms": 1206
       },
       {
         "name": "gh.jasonzeng.dev",
@@ -608,7 +642,7 @@
         "usage_examples": [
           "git clone https://gh.jasonzeng.dev/https://github.com/user/repo.git"
         ],
-        "test_time_ms": 955
+        "test_time_ms": 1153
       },
       {
         "name": "gh.monlor.com",
@@ -622,7 +656,7 @@
         "usage_examples": [
           "wget https://gh.monlor.com/https://github.com/user/repo/releases/download/v1.0/file.zip"
         ],
-        "test_time_ms": 752
+        "test_time_ms": 955
       },
       {
         "name": "fastgit.cc",
@@ -636,7 +670,7 @@
         "usage_examples": [
           "git clone https://fastgit.cc/user/repo.git"
         ],
-        "test_time_ms": 1030
+        "test_time_ms": 1242
       },
       {
         "name": "github.ednovas.xyz",
@@ -650,7 +684,7 @@
         "usage_examples": [
           "git clone https://github.ednovas.xyz/https://github.com/user/repo.git"
         ],
-        "test_time_ms": 1015
+        "test_time_ms": 1143
       },
       {
         "name": "gh.chjina.com",
@@ -664,7 +698,7 @@
         "usage_examples": [
           "git clone https://gh.chjina.com/https://github.com/user/repo.git"
         ],
-        "test_time_ms": 1083
+        "test_time_ms": 1249
       },
       {
         "name": "ghpxy.hwinzniej.top",
@@ -678,7 +712,8 @@
         "usage_examples": [
           "wget https://ghpxy.hwinzniej.top/https://github.com/user/repo/releases/download/v1.0/file.zip"
         ],
-        "test_time_ms": 962
+        "test_time_ms": 962,
+        "consecutive_failures": 1
       },
       {
         "name": "cdn.crashmc.com",
@@ -692,21 +727,7 @@
         "usage_examples": [
           "wget https://cdn.crashmc.com/https://github.com/user/repo/releases/download/v1.0/file.zip"
         ],
-        "test_time_ms": 996
-      },
-      {
-        "name": "git.yylx.win",
-        "url": "https://git.yylx.win/",
-        "test_url": "https://git.yylx.win/",
-        "proxy_type": "prefix",
-        "score": 98,
-        "last_tested": "2026-09-12",
-        "status": "active",
-        "notes": "来自operit.app官网'自动选择加速'内置列表（2026-09-11提取），未实测",
-        "usage_examples": [
-          "git clone https://git.yylx.win/https://github.com/user/repo.git"
-        ],
-        "test_time_ms": 1210
+        "test_time_ms": 1233
       },
       {
         "name": "gitproxy.mrhjx.cn",
@@ -720,35 +741,7 @@
         "usage_examples": [
           "git clone https://gitproxy.mrhjx.cn/https://github.com/user/repo.git"
         ],
-        "test_time_ms": 798
-      },
-      {
-        "name": "ghproxy.cxkpro.top",
-        "url": "https://ghproxy.cxkpro.top/",
-        "test_url": "https://ghproxy.cxkpro.top/",
-        "proxy_type": "prefix",
-        "score": 98,
-        "last_tested": "2026-09-12",
-        "status": "active",
-        "notes": "来自operit.app官网'自动选择加速'内置列表（2026-09-11提取），未实测",
-        "usage_examples": [
-          "wget https://ghproxy.cxkpro.top/https://github.com/user/repo/releases/download/v1.0/file.zip"
-        ],
-        "test_time_ms": 1111
-      },
-      {
-        "name": "gh.xxooo.cf",
-        "url": "https://gh.xxooo.cf/",
-        "test_url": "https://gh.xxooo.cf/",
-        "proxy_type": "prefix",
-        "score": 98,
-        "last_tested": "2026-09-12",
-        "status": "active",
-        "notes": "来自operit.app官网'自动选择加速'内置列表（2026-09-11提取），未实测",
-        "usage_examples": [
-          "git clone https://gh.xxooo.cf/https://github.com/user/repo.git"
-        ],
-        "test_time_ms": 1126
+        "test_time_ms": 922
       },
       {
         "name": "github.limoruirui.com",
@@ -762,7 +755,7 @@
         "usage_examples": [
           "git clone https://github.limoruirui.com/https://github.com/user/repo.git"
         ],
-        "test_time_ms": 1029
+        "test_time_ms": 1181
       },
       {
         "name": "gh.llkk.cc",
@@ -776,62 +769,145 @@
         "usage_examples": [
           "git clone https://gh.llkk.cc/https://github.com/user/repo.git"
         ],
-        "test_time_ms": 1076
-      },
-      {
-        "name": "gh.nxnow.top",
-        "url": "https://gh.nxnow.top/",
-        "test_url": "https://gh.nxnow.top/",
-        "proxy_type": "prefix",
-        "score": 98,
-        "last_tested": "2026-09-12",
-        "status": "active",
-        "notes": "来自operit.app官网'自动选择加速'内置列表（2026-09-11提取），未实测",
-        "usage_examples": [
-          "git clone https://gh.nxnow.top/https://github.com/user/repo.git"
-        ],
-        "test_time_ms": 1195
-      },
-      {
-        "name": "gh.zwy.one",
-        "url": "https://gh.zwy.one/",
-        "test_url": "https://gh.zwy.one/",
-        "proxy_type": "prefix",
-        "score": 98,
-        "last_tested": "2026-09-12",
-        "status": "active",
-        "notes": "来自operit.app官网'自动选择加速'内置列表（2026-09-11提取），未实测",
-        "usage_examples": [
-          "git clone https://gh.zwy.one/https://github.com/user/repo.git"
-        ],
-        "test_time_ms": 1084
-      },
-      {
-        "name": "ghproxy.net",
-        "url": "https://ghproxy.net/",
-        "test_url": "https://ghproxy.net/",
-        "proxy_type": "prefix",
-        "score": 97,
-        "last_tested": "2026-09-12",
-        "status": "active",
-        "notes": "2026-09-11 实测返回302跳转release-assets.githubusercontent.com，需可直连GitHub原始域才可用",
-        "usage_examples": [
-          "git clone https://ghproxy.net/https://github.com/user/repo.git",
-          "wget https://ghproxy.net/https://github.com/user/repo/archive/main.zip"
-        ],
-        "test_time_ms": 1456
+        "test_time_ms": 1237
       },
       {
         "name": "ghproxy.homeboyc.cn",
         "url": "https://ghproxy.homeboyc.cn/",
         "test_url": "https://ghproxy.homeboyc.cn/",
         "proxy_type": "prefix",
-        "score": 97,
+        "score": 98,
         "last_tested": "2026-09-12",
         "status": "active",
         "notes": "适合下载大体积Release包(1GB+)",
         "usage_examples": [
           "wget https://ghproxy.homeboyc.cn/https://github.com/user/repo/releases/download/v1.0/large-file.zip"
+        ],
+        "test_time_ms": 1121
+      },
+      {
+        "name": "down.npee.cn",
+        "url": "https://down.npee.cn/",
+        "test_url": "https://down.npee.cn/",
+        "proxy_type": "prefix",
+        "score": 98,
+        "last_tested": "2026-09-12",
+        "status": "active",
+        "notes": "来自operit.app官网'自动选择加速'内置列表（2026-09-11提取），注意官方URL结尾带'?'，未实测",
+        "usage_examples": [
+          "wget 'https://down.npee.cn/?https://github.com/user/repo/releases/download/v1.0/file.zip'"
+        ],
+        "test_time_ms": 1218
+      },
+      {
+        "name": "ghfile.geekertao.top",
+        "url": "https://ghfile.geekertao.top/",
+        "test_url": "https://ghfile.geekertao.top/",
+        "proxy_type": "prefix",
+        "score": 97,
+        "last_tested": "2026-09-12",
+        "status": "active",
+        "notes": "来自operit.app官网'自动选择加速'内置列表（2026-09-11提取），未实测",
+        "usage_examples": [
+          "wget https://ghfile.geekertao.top/https://github.com/user/repo/releases/download/v1.0/file.zip"
+        ],
+        "test_time_ms": 1255
+      },
+      {
+        "name": "GhProxy (ghproxy.com)",
+        "url": "https://ghproxy.com/",
+        "test_url": "https://ghproxy.com/",
+        "proxy_type": "prefix",
+        "score": 97,
+        "last_tested": "2026-09-12",
+        "status": "active",
+        "notes": "来自operit.app官网'自动选择加速'内置列表（2026-09-11提取），未实测",
+        "usage_examples": [
+          "git clone https://ghproxy.com/https://github.com/user/repo.git"
+        ],
+        "test_time_ms": 1419
+      },
+      {
+        "name": "gh-proxy.net",
+        "url": "https://gh-proxy.net/",
+        "test_url": "https://gh-proxy.net/",
+        "proxy_type": "prefix",
+        "score": 97,
+        "last_tested": "2026-09-12",
+        "status": "active",
+        "notes": "来自operit.app官网'自动选择加速'内置列表（2026-09-11提取），注意与ghproxy.net是不同域名，未实测",
+        "usage_examples": [
+          "wget https://gh-proxy.net/https://github.com/user/repo/releases/download/v1.0/file.zip"
+        ],
+        "test_time_ms": 1634
+      },
+      {
+        "name": "git.yylx.win",
+        "url": "https://git.yylx.win/",
+        "test_url": "https://git.yylx.win/",
+        "proxy_type": "prefix",
+        "score": 97,
+        "last_tested": "2026-09-12",
+        "status": "active",
+        "notes": "来自operit.app官网'自动选择加速'内置列表（2026-09-11提取），未实测",
+        "usage_examples": [
+          "git clone https://git.yylx.win/https://github.com/user/repo.git"
+        ],
+        "test_time_ms": 1365
+      },
+      {
+        "name": "ghproxy.cxkpro.top",
+        "url": "https://ghproxy.cxkpro.top/",
+        "test_url": "https://ghproxy.cxkpro.top/",
+        "proxy_type": "prefix",
+        "score": 97,
+        "last_tested": "2026-09-12",
+        "status": "active",
+        "notes": "来自operit.app官网'自动选择加速'内置列表（2026-09-11提取），未实测",
+        "usage_examples": [
+          "wget https://ghproxy.cxkpro.top/https://github.com/user/repo/releases/download/v1.0/file.zip"
+        ],
+        "test_time_ms": 1298
+      },
+      {
+        "name": "gh.xxooo.cf",
+        "url": "https://gh.xxooo.cf/",
+        "test_url": "https://gh.xxooo.cf/",
+        "proxy_type": "prefix",
+        "score": 97,
+        "last_tested": "2026-09-12",
+        "status": "active",
+        "notes": "来自operit.app官网'自动选择加速'内置列表（2026-09-11提取），未实测",
+        "usage_examples": [
+          "git clone https://gh.xxooo.cf/https://github.com/user/repo.git"
+        ],
+        "test_time_ms": 1253
+      },
+      {
+        "name": "gh.nxnow.top",
+        "url": "https://gh.nxnow.top/",
+        "test_url": "https://gh.nxnow.top/",
+        "proxy_type": "prefix",
+        "score": 97,
+        "last_tested": "2026-09-12",
+        "status": "active",
+        "notes": "来自operit.app官网'自动选择加速'内置列表（2026-09-11提取），未实测",
+        "usage_examples": [
+          "git clone https://gh.nxnow.top/https://github.com/user/repo.git"
+        ],
+        "test_time_ms": 1489
+      },
+      {
+        "name": "gh.zwy.one",
+        "url": "https://gh.zwy.one/",
+        "test_url": "https://gh.zwy.one/",
+        "proxy_type": "prefix",
+        "score": 97,
+        "last_tested": "2026-09-12",
+        "status": "active",
+        "notes": "来自operit.app官网'自动选择加速'内置列表（2026-09-11提取），未实测",
+        "usage_examples": [
+          "git clone https://gh.zwy.one/https://github.com/user/repo.git"
         ],
         "test_time_ms": 1273
       },
@@ -847,21 +923,7 @@
         "usage_examples": [
           "浏览器访问 https://521github.com/user/repo"
         ],
-        "test_time_ms": 1547
-      },
-      {
-        "name": "down.npee.cn",
-        "url": "https://down.npee.cn/",
-        "test_url": "https://down.npee.cn/",
-        "proxy_type": "prefix",
-        "score": 97,
-        "last_tested": "2026-09-12",
-        "status": "active",
-        "notes": "来自operit.app官网'自动选择加速'内置列表（2026-09-11提取），注意官方URL结尾带'?'，未实测",
-        "usage_examples": [
-          "wget 'https://down.npee.cn/?https://github.com/user/repo/releases/download/v1.0/file.zip'"
-        ],
-        "test_time_ms": 1362
+        "test_time_ms": 1436
       },
       {
         "name": "ghproxy.monkeyray.net",
@@ -875,7 +937,22 @@
         "usage_examples": [
           "git clone https://ghproxy.monkeyray.net/https://github.com/user/repo.git"
         ],
-        "test_time_ms": 1551
+        "test_time_ms": 1580
+      },
+      {
+        "name": "ghproxy.net",
+        "url": "https://ghproxy.net/",
+        "test_url": "https://ghproxy.net/",
+        "proxy_type": "prefix",
+        "score": 96,
+        "last_tested": "2026-09-12",
+        "status": "active",
+        "notes": "2026-09-11 实测返回302跳转release-assets.githubusercontent.com，需可直连GitHub原始域才可用",
+        "usage_examples": [
+          "git clone https://ghproxy.net/https://github.com/user/repo.git",
+          "wget https://ghproxy.net/https://github.com/user/repo/archive/main.zip"
+        ],
+        "test_time_ms": 1910
       },
       {
         "name": "hub.gitmirror.com",
@@ -889,7 +966,7 @@
         "usage_examples": [
           "wget https://hub.gitmirror.com/https://github.com/user/repo/releases/download/v1.0/file.zip"
         ],
-        "consecutive_failures": 1
+        "consecutive_failures": 2
       },
       {
         "name": "kkgithub.com",
@@ -904,7 +981,7 @@
           "git clone https://kkgithub.com/user/repo.git",
           "浏览器访问 https://kkgithub.com/user/repo"
         ],
-        "consecutive_failures": 1
+        "consecutive_failures": 2
       },
       {
         "name": "moeyy.cn/gh-proxy",
@@ -918,7 +995,7 @@
         "usage_examples": [
           "访问 https://moeyy.cn/gh-proxy/ 粘贴GitHub链接下载"
         ],
-        "consecutive_failures": 1
+        "consecutive_failures": 2
       },
       {
         "name": "hub.fastgit.org",
@@ -932,7 +1009,7 @@
         "usage_examples": [
           "git clone https://hub.fastgit.org/user/repo.git"
         ],
-        "consecutive_failures": 1
+        "consecutive_failures": 2
       },
       {
         "name": "github.com.cnpmjs.org",
@@ -946,7 +1023,22 @@
         "usage_examples": [
           "git clone https://github.com.cnpmjs.org/user/repo.git"
         ],
-        "consecutive_failures": 1
+        "consecutive_failures": 2
+      },
+      {
+        "name": "ghproxy.1888866.xyz",
+        "url": "https://ghproxy.1888866.xyz/",
+        "test_url": "https://ghproxy.1888866.xyz/",
+        "proxy_type": "prefix",
+        "score": 59,
+        "last_tested": "2026-09-12",
+        "status": "active",
+        "notes": "来自operit.app官网'自动选择加速'内置列表（2026-09-11提取），未实测",
+        "usage_examples": [
+          "git clone https://ghproxy.1888866.xyz/https://github.com/user/repo.git"
+        ],
+        "consecutive_failures": 1,
+        "test_time_ms": 20656
       },
       {
         "name": "Moeyy (github.moeyy.xyz)",
@@ -961,7 +1053,7 @@
           "git clone https://github.moeyy.xyz/https://github.com/user/repo.git",
           "wget https://github.moeyy.xyz/https://github.com/user/repo/releases/download/v1.0/file.zip"
         ],
-        "consecutive_failures": 1
+        "consecutive_failures": 2
       },
       {
         "name": "github.abskoop.workers.dev",
@@ -975,21 +1067,7 @@
         "usage_examples": [
           "git clone https://github.abskoop.workers.dev/https://github.com/user/repo.git"
         ],
-        "consecutive_failures": 1
-      },
-      {
-        "name": "ghproxy.1888866.xyz",
-        "url": "https://ghproxy.1888866.xyz/",
-        "test_url": "https://ghproxy.1888866.xyz/",
-        "proxy_type": "prefix",
-        "score": 50,
-        "last_tested": null,
-        "status": "active",
-        "notes": "来自operit.app官网'自动选择加速'内置列表（2026-09-11提取），未实测",
-        "usage_examples": [
-          "git clone https://ghproxy.1888866.xyz/https://github.com/user/repo.git"
-        ],
-        "consecutive_failures": 1
+        "consecutive_failures": 2
       },
       {
         "name": "ghproxy.cfd",
@@ -1003,7 +1081,7 @@
         "usage_examples": [
           "wget https://ghproxy.cfd/https://github.com/user/repo/releases/download/v1.0/file.zip"
         ],
-        "consecutive_failures": 1
+        "consecutive_failures": 2
       },
       {
         "name": "github.tbedu.top",
@@ -1017,7 +1095,7 @@
         "usage_examples": [
           "git clone https://github.tbedu.top/https://github.com/user/repo.git"
         ],
-        "consecutive_failures": 1
+        "consecutive_failures": 2
       },
       {
         "name": "firewall.lxstd.org",
@@ -1031,7 +1109,7 @@
         "usage_examples": [
           "wget https://firewall.lxstd.org/https://github.com/user/repo/releases/download/v1.0/file.zip"
         ],
-        "consecutive_failures": 1
+        "consecutive_failures": 2
       },
       {
         "name": "gh.xx9527.cn",
@@ -1045,7 +1123,7 @@
         "usage_examples": [
           "git clone https://gh.xx9527.cn/https://github.com/user/repo.git"
         ],
-        "consecutive_failures": 1
+        "consecutive_failures": 2
       },
       {
         "name": "GHProxy (mirror.ghproxy.com)",
@@ -1060,57 +1138,142 @@
           "git clone https://mirror.ghproxy.com/https://github.com/user/repo.git",
           "wget https://mirror.ghproxy.com/https://github.com/user/repo/releases/download/v1.0/file.zip"
         ],
-        "consecutive_failures": 1
+        "consecutive_failures": 2
       }
     ],
     "tools": [
       {
+        "name": "apt (阿里)",
+        "url": "https://mirrors.aliyun.com/ubuntu/",
+        "test_url": "https://mirrors.aliyun.com/ubuntu/dists/jammy/Release",
+        "score": 99,
+        "last_tested": "2026-09-12",
+        "test_time_ms": 488,
+        "status": "active",
+        "notes": "阿里云Ubuntu apt镜像"
+      },
+      {
+        "name": "crates.io (rsproxy)",
+        "url": "https://rsproxy.cn",
+        "test_url": "https://rsproxy.cn/index/config.json",
+        "score": 99,
+        "last_tested": "2026-09-12",
+        "test_time_ms": 518,
+        "status": "active",
+        "notes": "字节跳动Rust crates镜像，官方推荐"
+      },
+      {
+        "name": "Composer (阿里)",
+        "url": "https://mirrors.aliyun.com/composer/",
+        "test_url": "https://mirrors.aliyun.com/composer/packages.json",
+        "score": 99,
+        "last_tested": "2026-09-12",
+        "test_time_ms": 378,
+        "status": "active",
+        "notes": "阿里云Composer PHP依赖镜像"
+      },
+      {
+        "name": "RubyGems (清华)",
+        "url": "https://mirrors.tuna.tsinghua.edu.cn/rubygems/",
+        "test_url": "https://mirrors.tuna.tsinghua.edu.cn/rubygems/",
+        "score": 99,
+        "last_tested": "2026-09-12",
+        "test_time_ms": 395,
+        "status": "active",
+        "notes": "清华RubyGems镜像"
+      },
+      {
+        "name": "Gradle (腾讯)",
+        "url": "https://mirrors.cloud.tencent.com/gradle/",
+        "test_url": "https://mirrors.cloud.tencent.com/gradle/",
+        "score": 99,
+        "last_tested": "2026-09-12",
+        "test_time_ms": 471,
+        "status": "active",
+        "notes": "腾讯云Gradle发行版镜像"
+      },
+      {
+        "name": "npm (华为云)",
+        "url": "https://mirrors.huaweicloud.com/repository/npm/",
+        "test_url": "https://mirrors.huaweicloud.com/repository/npm/",
+        "score": 99,
+        "last_tested": "2026-09-12",
+        "test_time_ms": 481,
+        "status": "active",
+        "notes": "华为云npm镜像"
+      },
+      {
         "name": "npm 淘宝镜像",
         "url": "https://registry.npmmirror.com",
         "test_url": "https://registry.npmmirror.com",
-        "score": 90,
-        "last_tested": null,
+        "score": 99,
+        "last_tested": "2026-09-12",
         "status": "active",
         "notes": "阿里旗下npm镜像，最稳定的npm加速方案",
-        "usage": "npm config set registry https://registry.npmmirror.com"
-      },
-      {
-        "name": "pip 清华镜像",
-        "url": "https://pypi.tuna.tsinghua.edu.cn/simple",
-        "test_url": "https://pypi.tuna.tsinghua.edu.cn/simple/",
-        "score": 88,
-        "last_tested": null,
-        "status": "active",
-        "notes": "清华PyPI镜像，稳定快速",
-        "usage": "pip install -i https://pypi.tuna.tsinghua.edu.cn/simple <package>"
+        "usage": "npm config set registry https://registry.npmmirror.com",
+        "test_time_ms": 332
       },
       {
         "name": "Go proxy (阿里)",
         "url": "https://goproxy.cn",
         "test_url": "https://goproxy.cn",
-        "score": 88,
-        "last_tested": null,
+        "score": 99,
+        "last_tested": "2026-09-12",
         "status": "active",
         "notes": "阿里Go模块代理",
-        "usage": "go env -w GOPROXY=https://goproxy.cn,direct"
-      },
-      {
-        "name": "Gitee 镜像库",
-        "url": "https://gitee.com/organizations/mirrors/projects",
-        "test_url": "https://gitee.com/organizations/mirrors/projects",
-        "score": 85,
-        "last_tested": null,
-        "status": "active",
-        "notes": "码云官方镜像库，含thousands+热门开源项目，最稳定的GitHub替代方案。支持git clone。"
+        "usage": "go env -w GOPROXY=https://goproxy.cn,direct",
+        "test_time_ms": 394
       },
       {
         "name": "清华 GitHub Release 镜像",
         "url": "https://mirrors.tuna.tsinghua.edu.cn/github-release",
         "test_url": "https://mirrors.tuna.tsinghua.edu.cn/github-release",
-        "score": 85,
-        "last_tested": null,
+        "score": 99,
+        "last_tested": "2026-09-12",
         "status": "active",
-        "notes": "清华镜像源，学术场景首选，支持按项目名检索Release。极其稳定。"
+        "notes": "清华镜像源，学术场景首选，支持按项目名检索Release。极其稳定。",
+        "test_time_ms": 666
+      },
+      {
+        "name": "apt (清华)",
+        "url": "https://mirrors.tuna.tsinghua.edu.cn/ubuntu/",
+        "test_url": "https://mirrors.tuna.tsinghua.edu.cn/ubuntu/dists/jammy/Release",
+        "score": 98,
+        "last_tested": "2026-09-12",
+        "test_time_ms": 942,
+        "status": "active",
+        "notes": "清华Ubuntu apt镜像"
+      },
+      {
+        "name": "Maven (腾讯)",
+        "url": "https://mirrors.cloud.tencent.com/nexus/repository/maven-public/",
+        "test_url": "https://mirrors.cloud.tencent.com/nexus/repository/maven-public/",
+        "score": 98,
+        "last_tested": null,
+        "test_time_ms": null,
+        "status": "active",
+        "notes": "腾讯云Maven公共仓库镜像",
+        "consecutive_failures": 1
+      },
+      {
+        "name": "ineo6 hosts",
+        "url": "https://ineo6.github.io/hosts/",
+        "test_url": "https://ineo6.github.io/hosts/",
+        "score": 97,
+        "last_tested": "2026-09-12",
+        "status": "active",
+        "notes": "自动更新GitHub hosts文件的在线服务",
+        "test_time_ms": 1322
+      },
+      {
+        "name": "Gitee 镜像库",
+        "url": "https://gitee.com/organizations/mirrors/projects",
+        "test_url": "https://gitee.com/organizations/mirrors/projects",
+        "score": 96,
+        "last_tested": "2026-09-12",
+        "status": "active",
+        "notes": "码云官方镜像库，含thousands+热门开源项目，最稳定的GitHub替代方案。支持git clone。",
+        "test_time_ms": 1850
       },
       {
         "name": "git config insteadOf (全局代理)",
@@ -1141,13 +1304,35 @@
         "notes": "通过修改hosts文件加速GitHub，自动更新IP地址。安装后无需额外操作。"
       },
       {
-        "name": "ineo6 hosts",
-        "url": "https://ineo6.github.io/hosts/",
-        "test_url": "https://ineo6.github.io/hosts/",
-        "score": 65,
-        "last_tested": null,
+        "name": "Homebrew (清华)",
+        "url": "https://mirrors.tuna.tsinghua.edu.cn/homebrew-bottles/",
+        "test_url": "https://mirrors.tuna.tsinghua.edu.cn/homebrew-bottles/",
+        "score": 69,
+        "last_tested": "2026-09-12",
+        "test_time_ms": 15574,
         "status": "active",
-        "notes": "自动更新GitHub hosts文件的在线服务"
+        "notes": "清华Homebrew bottles镜像"
+      },
+      {
+        "name": "pip 清华镜像",
+        "url": "https://pypi.tuna.tsinghua.edu.cn/simple",
+        "test_url": "https://pypi.tuna.tsinghua.edu.cn/simple/",
+        "score": 56,
+        "last_tested": "2026-09-12",
+        "status": "active",
+        "notes": "清华PyPI镜像，稳定快速",
+        "usage": "pip install -i https://pypi.tuna.tsinghua.edu.cn/simple <package>",
+        "test_time_ms": 22237
+      },
+      {
+        "name": "pypi (阿里)",
+        "url": "https://mirrors.aliyun.com/pypi/simple/",
+        "test_url": "https://mirrors.aliyun.com/pypi/simple/",
+        "score": 53,
+        "last_tested": "2026-09-12",
+        "test_time_ms": 23385,
+        "status": "active",
+        "notes": "阿里云PyPI镜像"
       }
     ]
   }

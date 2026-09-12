@@ -1,112 +1,97 @@
 #!/bin/bash
 # =============================================================================
-# test_mirrors.sh — Docker & GitHub Mirror Speed/Availability Tester
+# test_mirrors.sh — 并发测速脚本（Docker / GitHub / Tools 镜像源）
 # =============================================================================
-# Tests mirror availability and response time using curl.
-# Outputs JSON results that can be consumed by update_mirrors.py.
+# 真并发：xargs -P 任务池（默认 8 并行，可用 --parallel 调整），
+# 全量 90+ 源从串行约 1 分钟降至数秒。
+# 输出 JSON 由 Python 统一组装（彻底消除手工字符串拼接的非法 JSON 风险），
+# 可直接 `python3 update_mirrors.py --input result.json` 回写。
 #
-# Requirements: curl, python3 (for JSON parsing), awk
-# Usage:
-#   bash test_mirrors.sh [--type docker|github|all] [--output FILE] [--timeout 10]
+# 用法:
+#   bash test_mirrors.sh [--type docker|github|tools|all] [--output FILE] [--timeout 10] [--parallel 8]
 #
-# Example:
-#   bash test_mirrors.sh --type all --output /tmp/mirror_results.json
+# 示例:
+#   bash test_mirrors.sh --type all --output /tmp/all.json --timeout 8 --parallel 16
+#   bash test_mirrors.sh --type tools
 # =============================================================================
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 MIRRORS_FILE="${SCRIPT_DIR}/references/mirrors.json"
 TIMEOUT=10
+PARALLEL=8
 TEST_TYPE="all"
 OUTPUT_FILE=""
-GITHUB_TEST_FILE="https://raw.githubusercontent.com/octocat/Hello-World/master/README"
 
-# ---- Color codes for pretty output ----
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 CYAN='\033[0;36m'
-NC='\033[0m' # No Color
+NC='\033[0m'
 
-# ---- Parse arguments ----
+# ---- 参数解析 ----
 while [[ $# -gt 0 ]]; do
     case $1 in
-        --type)
-            TEST_TYPE="$2"; shift 2 ;;
-        --output)
-            OUTPUT_FILE="$2"; shift 2 ;;
-        --timeout)
-            TIMEOUT="$2"; shift 2 ;;
+        --type)       TEST_TYPE="$2"; shift 2 ;;
+        --output)     OUTPUT_FILE="$2"; shift 2 ;;
+        --timeout)    TIMEOUT="$2"; shift 2 ;;
+        --parallel)   PARALLEL="$2"; shift 2 ;;
         --help|-h)
-            echo "Usage: $0 [--type docker|github|all] [--output FILE] [--timeout SECONDS]"
-            echo ""
-            echo "Options:"
-            echo "  --type     Test category: docker (Docker mirrors), github (GitHub proxies), all (default)"
-            echo "  --output   Write JSON results to FILE (default: stdout)"
-            echo "  --timeout  Connection timeout in seconds (default: 10)"
+            cat <<EOF
+用法: $0 [--type docker|github|tools|all] [--output FILE] [--timeout SECONDS] [--parallel N]
+
+  --type      分类: docker(社区+企业) | github | tools | all(默认)
+  --output    结果 JSON 输出文件（默认 stdout）
+  --timeout   curl 连接超时秒数（默认 10）
+  --parallel  并发任务数（默认 8）
+EOF
             exit 0 ;;
-        *)
-            echo "Unknown option: $1" >&2; exit 1 ;;
+        *) echo "Unknown option: $1" >&2; exit 1 ;;
     esac
 done
 
-# ---- Check dependencies ----
-if ! command -v curl &>/dev/null; then
-    echo "Error: curl is required but not found." >&2
-    exit 1
-fi
+# ---- 依赖检查 ----
+for cmd in curl python3 awk; do
+    command -v "$cmd" &>/dev/null || { echo "Error: $cmd 未安装" >&2; exit 1; }
+done
+[[ -f "$MIRRORS_FILE" ]] || { echo "Error: 找不到 $MIRRORS_FILE" >&2; exit 1; }
 
-if ! command -v python3 &>/dev/null; then
-    echo "Error: python3 is required but not found." >&2
-    exit 1
-fi
-
-if [[ ! -f "$MIRRORS_FILE" ]]; then
-    echo "Error: mirrors.json not found at $MIRRORS_FILE" >&2
-    exit 1
-fi
-
-# ---- Helper: test a single URL ----
-# Outputs: name|url|time_ms|http_code|status
+# ---- 测速单个源 ----
+# 输出: name|url|time_ms|http_code|status
 test_single() {
     local name="$1"
     local url="$2"
     local test_url="$3"
 
+    # 无 test_url 的源跳过（不参与测速，保留原分）
     if [[ -z "$test_url" || "$test_url" == "null" ]]; then
-        printf "%s|%s|0|0|skipped\n" "$name" "$url"
+        printf '%s|%s|0|0|skipped\n' "$name" "$url"
         return
     fi
 
-    # Use curl's built-in timing
-    local result
+    local result time_total http_code time_ms status="ok"
     result=$(curl -o /dev/null -s \
-        -w "%{time_total}|%{http_code}" \
+        -w '%{time_total}|%{http_code}' \
         --connect-timeout "$TIMEOUT" \
         --max-time "$((TIMEOUT * 3))" \
-        "$test_url" 2>/dev/null || echo "0.00|000")
+        "$test_url" 2>/dev/null || echo '0.00|000')
 
-    local time_total="${result%%|*}"
-    local http_code="${result##*|}"
-
-    # Convert time_total (seconds, float) to milliseconds (integer)
-    local time_ms
+    time_total="${result%%|*}"
+    http_code="${result##*|}"
     time_ms=$(awk -v t="$time_total" 'BEGIN { printf "%.0f", t * 1000 }')
 
-    # Determine status
-    local status="ok"
-    if [[ "$http_code" == "000" ]]; then
-        status="failed"
-    elif [[ "$http_code" == "404" ]]; then
-        status="failed"
-    elif [[ "$http_code" == "502" || "$http_code" == "503" ]]; then
-        status="failed"
-    fi
+    # 失败判定：连接失败 / 明确错误码 / 限流
+    case "$http_code" in
+        000|404|502|503|403|429) status="failed" ;;
+    esac
 
-    printf "%s|%s|%s|%s|%s\n" "$name" "$url" "$time_ms" "$http_code" "$status"
+    printf '%s|%s|%s|%s|%s\n' "$name" "$url" "$time_ms" "$http_code" "$status"
 }
+export -f test_single
+export TIMEOUT
 
-# ---- Helper: get mirrors from JSON ----
+# ---- 取指定分类镜像列表 ----
+# 输出每行: name|url|test_url
 get_mirrors() {
     local category="$1"
     python3 -c "
@@ -115,128 +100,122 @@ with open('$MIRRORS_FILE') as f:
     data = json.load(f)
 for m in data.get('mirrors', {}).get('$category', []):
     name = m.get('name', '')
-    url = m.get('url', '')
-    test_url = m.get('test_url', '')
-    if test_url is None:
-        test_url = ''
-    # Skip deprecated mirrors unless they have a test_url (to check revival)
+    url = m.get('url', '') or ''
+    test_url = m.get('test_url', '') or ''
+    # 跳过无 test_url 的已弃用源；有 test_url 的保留以检测复活
     if m.get('status') == 'deprecated' and not test_url:
         continue
     print(f'{name}|{url}|{test_url}')
 " 2>/dev/null
 }
 
-# ---- Main test runner ----
-echo -e "${CYAN}╔══════════════════════════════════════════════════╗${NC}"
-echo -e "${CYAN}║   Mirror Speed & Availability Tester              ║${NC}"
-echo -e "${CYAN}╚══════════════════════════════════════════════════╝${NC}"
+# ---- 并发测试一个分类，输出 JSON 片段到 stdout ----
+test_category() {
+    local category="$1"
+    local tmpdir="$2"
+    local list_file="${tmpdir}/${category}.list"
+    local out_file="${tmpdir}/${category}.out"
+
+    get_mirrors "$category" > "$list_file" || true
+    [[ -s "$list_file" ]] || { echo "[]"; return; }
+
+    # xargs -P 并发执行 test_single，结果写每行 "name|url|time|code|status"
+    cat "$list_file" | xargs -P "$PARALLEL" -I{} bash -c '
+        IFS="|" read -r n u t <<< "$1"
+        test_single "$n" "$u" "$t"
+    ' _ {} > "$out_file" 2>/dev/null || true
+
+    # 用 Python 组装合法 JSON 数组（避免字符串拼接转义问题）
+    python3 -c "
+import json, sys
+entries = []
+with open('$out_file') as f:
+    for line in f:
+        line = line.rstrip('\n')
+        if not line:
+            continue
+        parts = line.split('|')
+        if len(parts) < 5:
+            continue
+        name, url, time_ms, code, status = parts[0], parts[1], parts[2], parts[3], parts[4]
+        entries.append({
+            'name': name,
+            'url': url,
+            'time_ms': int(time_ms) if time_ms.isdigit() else 0,
+            'http_code': code,
+            'status': status,
+        })
+print(json.dumps(entries, ensure_ascii=False))
+"
+}
+
+# ================= 主流程 =================
+echo -e "${CYAN}══════════════════════════════════════════════${NC}"
+echo -e "${CYAN}  accel-mirror 并发测速引擎${NC}"
+echo -e "${CYAN}══════════════════════════════════════════════${NC}"
+echo "  并发: ${PARALLEL}  |  超时: ${TIMEOUT}s  |  类型: ${TEST_TYPE}"
+echo "  数据库: ${MIRRORS_FILE}"
 echo ""
-echo "  Timeout: ${TIMEOUT}s  |  Type: ${TEST_TYPE}  |  Database: ${MIRRORS_FILE}"
-echo ""
 
-# Prepare JSON output
-JSON_RESULT='{"test_time":"'$(date -Iseconds)'","results":{'
-FIRST_CATEGORY=1
+# 解析要测的分类
+CATEGORIES=()
+case "$TEST_TYPE" in
+    all)     CATEGORIES=(docker_community docker_enterprise github tools) ;;
+    docker)  CATEGORIES=(docker_community docker_enterprise) ;;
+    github)  CATEGORIES=(github) ;;
+    tools)   CATEGORIES=(tools) ;;
+    *) echo "Error: 未知分类 '$TEST_TYPE'（可用: docker|github|tools|all）" >&2; exit 1 ;;
+esac
 
-# ---- Test Docker mirrors ----
-if [[ "$TEST_TYPE" == "docker" || "$TEST_TYPE" == "all" ]]; then
-    echo -e "${YELLOW}━━━ Testing Docker Community Mirrors ━━━${NC}"
+# 临时目录（mktemp 保证唯一且可写）
+TMPDIR="$(mktemp -d)"
+trap 'rm -rf "$TMPDIR"' EXIT
 
-    if [[ $FIRST_CATEGORY -eq 0 ]]; then
-        JSON_RESULT+=','
-    fi
-    FIRST_CATEGORY=0
-    JSON_RESULT+='"docker_community":['
-
-    first_entry=1
-    while IFS='|' read -r name url test_url; do
-        [[ -z "$name" ]] && continue
-
-        result_line=$(test_single "$name" "$url" "$test_url")
-        IFS='|' read -r r_name r_url r_time r_code r_status <<< "$result_line"
-
-        # Pretty print
-        if [[ "$r_status" == "ok" ]]; then
-            printf "  ${GREEN}✓${NC} %-35s  %5sms  HTTP %s\n" "$r_name" "$r_time" "$r_code"
-        elif [[ "$r_status" == "skipped" ]]; then
-            printf "  ${YELLOW}⊘${NC} %-35s  (no test URL)\n" "$r_name"
-        else
-            printf "  ${RED}✗${NC} %-35s  FAILED  HTTP %s\n" "$r_name" "$r_code"
-        fi
-
-        # Build JSON
-        if [[ $first_entry -eq 0 ]]; then
-            JSON_RESULT+=','
-        fi
-        first_entry=0
-        JSON_RESULT+="{\"name\":\"$r_name\",\"url\":\"$r_url\",\"time_ms\":$r_time,\"http_code\":\"$r_code\",\"status\":\"$r_status\"}"
-
-    done < <(get_mirrors "docker_community")
-
-    JSON_RESULT+=']'
-
-    # Also test enterprise mirrors
+for cat in "${CATEGORIES[@]}"; do
+    echo -e "${YELLOW}━━━ Testing ${cat} ━━━${NC}"
+    test_category "$cat" "$TMPDIR" > /dev/null
+    count=$(wc -l < "${TMPDIR}/${cat}.out" 2>/dev/null || echo 0)
+    echo -e "  ${GREEN}✓${NC} ${cat}: ${count} sources"
     echo ""
-    echo -e "${YELLOW}━━━ Testing Docker Enterprise Mirrors ━━━${NC}"
-    JSON_RESULT+=',"docker_enterprise":['
-    first_entry=1
-    while IFS='|' read -r name url test_url; do
-        [[ -z "$name" ]] && continue
-        result_line=$(test_single "$name" "$url" "$test_url")
-        IFS='|' read -r r_name r_url r_time r_code r_status <<< "$result_line"
-        if [[ "$r_status" == "ok" ]]; then
-            printf "  ${GREEN}✓${NC} %-35s  %5sms  HTTP %s\n" "$r_name" "$r_time" "$r_code"
-        elif [[ "$r_status" == "skipped" ]]; then
-            printf "  ${YELLOW}⊘${NC} %-35s  (no test URL)\n" "$r_name"
-        else
-            printf "  ${RED}✗${NC} %-35s  FAILED  HTTP %s\n" "$r_name" "$r_code"
-        fi
-        if [[ $first_entry -eq 0 ]]; then JSON_RESULT+=','; fi
-        first_entry=0
-        JSON_RESULT+="{\"name\":\"$r_name\",\"url\":\"$r_url\",\"time_ms\":$r_time,\"http_code\":\"$r_code\",\"status\":\"$r_status\"}"
-    done < <(get_mirrors "docker_enterprise")
-    JSON_RESULT+=']'
-fi
+done
 
-# ---- Test GitHub mirrors ----
-if [[ "$TEST_TYPE" == "github" || "$TEST_TYPE" == "all" ]]; then
-    echo ""
-    echo -e "${YELLOW}━━━ Testing GitHub Mirrors ━━━${NC}"
+# Python 统一组装最终 JSON（直接读 .out 管道文件，完全规避字符串插值/转义问题）
+FINAL_JSON="$(python3 - "$TMPDIR" <<'PY'
+import json, os, sys
+from datetime import datetime
 
-    if [[ $FIRST_CATEGORY -eq 0 ]]; then
-        JSON_RESULT+=','
-    fi
-    FIRST_CATEGORY=0
-    JSON_RESULT+='"github":['
+tmpdir = sys.argv[1]
+result = {}
+for f in sorted(os.listdir(tmpdir)):
+    if not f.endswith('.out'):
+        continue
+    cat = f[:-4]
+    entries = []
+    with open(os.path.join(tmpdir, f), encoding='utf-8') as fh:
+        for line in fh:
+            parts = line.rstrip('\n').split('|')
+            if len(parts) < 5:
+                continue
+            name, url, time_ms, code, status = parts[0], parts[1], parts[2], parts[3], parts[4]
+            entries.append({
+                'name': name,
+                'url': url,
+                'time_ms': int(time_ms) if time_ms.isdigit() else 0,
+                'http_code': code,
+                'status': status,
+            })
+    result[cat] = entries
 
-    first_entry=1
-    while IFS='|' read -r name url test_url; do
-        [[ -z "$name" ]] && continue
-        result_line=$(test_single "$name" "$url" "$test_url")
-        IFS='|' read -r r_name r_url r_time r_code r_status <<< "$result_line"
-        if [[ "$r_status" == "ok" ]]; then
-            printf "  ${GREEN}✓${NC} %-35s  %5sms  HTTP %s\n" "$r_name" "$r_time" "$r_code"
-        elif [[ "$r_status" == "skipped" ]]; then
-            printf "  ${YELLOW}⊘${NC} %-35s  (no test URL)\n" "$r_name"
-        else
-            printf "  ${RED}✗${NC} %-35s  FAILED  HTTP %s\n" "$r_name" "$r_code"
-        fi
-        if [[ $first_entry -eq 0 ]]; then JSON_RESULT+=','; fi
-        first_entry=0
-        JSON_RESULT+="{\"name\":\"$r_name\",\"url\":\"$r_url\",\"time_ms\":$r_time,\"http_code\":\"$r_code\",\"status\":\"$r_status\"}"
-    done < <(get_mirrors "github")
-    JSON_RESULT+=']'
-fi
+print(json.dumps({'test_time': datetime.now().isoformat(), 'results': result}, ensure_ascii=False))
+PY
+)"
 
-JSON_RESULT+='}}'
-
-# ---- Output results ----
-echo ""
+# 输出
 if [[ -n "$OUTPUT_FILE" ]]; then
-    echo "$JSON_RESULT" | python3 -m json.tool > "$OUTPUT_FILE" 2>/dev/null || echo "$JSON_RESULT" > "$OUTPUT_FILE"
-    echo -e "${GREEN}Results saved to: ${OUTPUT_FILE}${NC}"
+    echo "$FINAL_JSON" | python3 -m json.tool > "$OUTPUT_FILE"
+    echo -e "${GREEN}✅ Results saved to: ${OUTPUT_FILE}${NC}"
 else
-    echo "$JSON_RESULT" | python3 -m json.tool 2>/dev/null || echo "$JSON_RESULT"
+    echo "$FINAL_JSON" | python3 -m json.tool
 fi
 
 echo -e "${CYAN}Test complete.${NC}"

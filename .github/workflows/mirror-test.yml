@@ -1,0 +1,85 @@
+name: Mirror Health Test
+
+on:
+  schedule:
+    # 每周日 22:00 UTC（北京时间周一 06:00）自动跑一次全量测速
+    - cron: '0 22 * * 0'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: 全量镜像测速
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: 检出仓库
+        uses: actions/checkout@v4
+
+      - name: 配置 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: 语法检查
+        run: |
+          bash -n scripts/test_mirrors.sh
+          bash -n scripts/accel-fetch.sh
+          python3 -m py_compile scripts/update_mirrors.py
+
+      - name: 运行全量测速
+        run: |
+          bash scripts/test_mirrors.sh --type all --output mirror_test_results.json --timeout 10
+
+      - name: 生成健康摘要
+        run: |
+          python3 - "$GITHUB_STEP_SUMMARY" <<'PY'
+          import json, sys
+
+          summary_path = sys.argv[1]
+          with open('mirror_test_results.json') as f:
+              data = json.load(f)
+
+          results = data.get('results', {})
+          lines = ['## 📊 镜像健康摘要', '']
+          lines.append(f"- 测试时间: {data.get('test_time', 'N/A')}")
+
+          total = ok = failed = skipped = 0
+          cat_summary = []
+          for cat, items in results.items():
+              lines.append(f"\n### {cat}")
+              cat_ok = cat_fail = cat_skip = 0
+              for r in items:
+                  total += 1
+                  st = r.get('status', '')
+                  if st == 'ok':
+                      ok += 1
+                      cat_ok += 1
+                      lines.append(f"- ✅ {r['name']}: {r.get('time_ms')}ms")
+                  elif st == 'failed':
+                      failed += 1
+                      cat_fail += 1
+                      lines.append(f"- ❌ {r['name']}: 失败")
+                  else:
+                      skipped += 1
+                      cat_skip += 1
+                      lines.append(f"- ⏭️ {r['name']}: 跳过")
+              cat_summary.append(f"{cat}: {cat_ok}✅/{cat_fail}❌/{cat_skip}⏭️")
+
+          lines.insert(2, f"- 总计: {total} | ✅ {ok} | ❌ {failed} | ⏭️ {skipped}")
+          lines.insert(3, f"- 分类: {', '.join(cat_summary)}")
+          lines.append("")
+          lines.append("> ⚠️ 注意：CI 运行在 GitHub 官方 runner 上，测速数据反映的是**数据中心网络**而非国内用户网络，")
+          lines.append("> 仅供存活率监控参考。真实网络下的分数请以 `test_mirrors.sh` 在目标环境实测为准。")
+
+          with open(summary_path, 'a') as f:
+              f.write('\n'.join(lines) + '\n')
+          PY
+
+      - name: 上传测速结果
+        uses: actions/upload-artifact@v4
+        with:
+          name: mirror-test-results
+          path: mirror_test_results.json
