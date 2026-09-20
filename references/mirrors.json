@@ -100,6 +100,11 @@
       "date": "2026-09-12",
       "action": "added",
       "details": "添加腾讯云CCS镜像加速 mirror.ccs.tencentyun.com 至 docker_enterprise（score 50 未测）。实测：公网DNS解析失败（该域名无公网记录，官方定位腾讯云CVM内网专用），故标注内网专用。来源：军哥要求补全腾讯云加速地址 + 腾讯云官方文档确认。"
+    },
+    {
+      "date": "2026-09-12",
+      "action": "tested",
+      "details": "实测 gh-proxy.com 下载 OneBox 1.3.9 APK（50.1MB）：7.5秒完成，平均6.9MB/s峰值9.5MB/s，SHA256校验通过。gh-proxy.com 再次验证极速稳定（第二次实测确认）。"
     }
   ],
   "mirrors": {
