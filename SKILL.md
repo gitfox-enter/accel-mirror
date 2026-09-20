@@ -1,6 +1,6 @@
 ---
 name: accel-mirror
-description: Manage and apply network acceleration mirrors for Docker Hub images and GitHub access. Use this skill whenever the user needs to pull Docker images, configure Docker daemon.json with registry mirrors, clone or download from GitHub, set up GitHub proxy/acceleration, or encounters slow/blocked access to Docker Hub or GitHub. Also triggers on: docker mirror, 镜像加速, ghproxy, git clone slow, registry-mirrors, docker pull timeout, github 加速, 镜像源, 华为云 swr, ddn-k8s, docker源, github镜像, npm镜像, pip镜像, or any similar acceleration/proxy concept. Even if the user just mentions "docker慢", "github打不开", "镜像", or "加速", use this skill immediately.
+description: Manage and apply network acceleration mirrors for Docker Hub images and GitHub access. Use this skill whenever the user needs to pull Docker images, configure Docker daemon.json with registry mirrors, clone or download from GitHub, set up GitHub proxy/acceleration, or encounters slow/blocked access to Docker Hub or GitHub. Also triggers on: docker mirror, 镜像加速, ghproxy, git clone slow, registry-mirrors, docker pull timeout, github 加速, 镜像源, 华为云 swr, ddn-k8s, docker源, github镜像, npm镜像, pip镜像, 下载慢, 下载失败, 下载哈希不一致, 下载器安装, aria2, axel, or any similar acceleration/proxy concept. Even if the user just mentions "docker慢", "github打不开", "镜像", "加速", "下载", or "装下载器", use this skill immediately.
 ---
 
 # Accelerated Mirror Manager (accel-mirror)
@@ -102,9 +102,38 @@ git config --global url."https://<best_proxy>/https://".insteadOf "https://githu
 For one-off file downloads (release assets / archive tarballs / raw files), prefer `scripts/accel-fetch.sh` — it auto-probes the top-scored prefix proxies, picks the fastest reachable one, and falls back on failure:
 
 ```bash
-bash scripts/accel-fetch.sh https://github.com/user/repo/releases/download/v1.0/file.zip -o file.zip
+bash scripts/accel-fetch.sh https://github.com/user/repo/releases/download/v1.0/file.zip
 bash scripts/accel-fetch.sh --list   # show currently available prefix proxies
+bash scripts/accel-fetch.sh --doctor # check/downloader self-test
 ```
+
+### Phase 3d — 下载器自检与安装（下载难题标准流程）
+
+**当用户遇到下载慢/失败/哈希不一致时，AI 应按以下流程处理：**
+
+1. **先自检**：`bash scripts/accel-fetch.sh --doctor`
+   - 检查 aria2c（多线程引擎）/ curl（最稳）/ axel（备用）是否可用
+   - 缺失的自动给出安装命令并执行（见下表）
+2. **装齐三件套**（aria2 + curl + axel），按平台执行：
+
+| 平台 | 安装命令 |
+|------|---------|
+| Debian/Ubuntu（含 proot 小电脑） | `sudo apt-get update && sudo apt-get install -y aria2 curl axel` |
+| CentOS/RHEL/Fedora | `sudo yum install -y aria2 curl axel`（或 dnf） |
+| Alpine | `apk add aria2 curl axel` |
+| macOS (Homebrew) | `brew install aria2 axel` |
+| Termux (Android) | `pkg install aria2 curl axel` |
+
+3. **再用 `--doctor` 验证**，确认 3/3 后再下载
+4. **下载**：`bash scripts/accel-fetch.sh <github_url> [-o 文件名] [--sha256 哈希]`
+   - auto 模式自动用 aria2 多线程（16×16），失败回退 curl → axel
+   - 每轮下载做【大小校验】（多数投票基准）与可选 SHA256 校验
+   - 校验失败自动换下一候选源，直到成功
+
+**已知教训（2026-09 实战）**：
+- aria2 多线程经部分代理 Range 可能不完整 → 必须做大小/哈希校验，不能只看「下载完成」
+- 部分加速源（如 gh.con.sh）响应快但返回错误页/小文件 → 期望大小用**多数投票**（可达源中出现最多的 size），防单一坏源带偏
+- GitHub release 资产不提供 SHA256 字段，APK 类文件建议用签名校验作为最终权威验证
 
 ### Phase 3c — Package manager mirrors
 
