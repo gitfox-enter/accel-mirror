@@ -15,9 +15,10 @@ accel-mirror/
 ├── references/
 │   ├── mirrors.json             # Live mirror database (scores, status, metadata)
 │   ├── docker-mirrors-guide.md  # Docker acceleration detailed guide
-│   └── github-mirrors-guide.md  # GitHub acceleration detailed guide
+│   ├── github-mirrors-guide.md  # GitHub acceleration detailed guide
+│   └── package-managers-guide.md # npm/pip/apt/Homebrew/Rust/etc. mirror guide
 ├── scripts/
-│   ├── test_mirrors.sh          # Speed/availability testing (curl-based)
+│   ├── test_mirrors.sh          # Speed/availability testing (curl-based, --deep for throughput)
 │   ├── update_mirrors.py        # Score update & sorting (Python3)
 │   └── accel-fetch.sh           # Auto-download with smart proxy selection + fallback
 └── .github/
@@ -107,6 +108,18 @@ bash scripts/accel-fetch.sh --list   # show currently available prefix proxies
 bash scripts/accel-fetch.sh --doctor # check/downloader self-test
 ```
 
+### Phase 3c — Package manager mirrors
+
+Present relevant entries from the `tools` category. One-liners:
+
+- npm: `npm config set registry https://registry.npmmirror.com`
+- pip: `pip install -i https://pypi.tuna.tsinghua.edu.cn/simple <package>`
+- Go: `go env -w GOPROXY=https://goproxy.cn,direct`
+
+For apt / Homebrew / Rust / Composer / RubyGems / Gradle / Maven and the full
+configuration walkthrough, read `references/package-managers-guide.md` and use
+the top-scored mirror for each tool from the `tools` category.
+
 ### Phase 3d — 下载器自检与安装（下载难题标准流程）
 
 **当用户遇到下载慢/失败/哈希不一致时，AI 应按以下流程处理：**
@@ -135,16 +148,15 @@ bash scripts/accel-fetch.sh --doctor # check/downloader self-test
 - 部分加速源（如 gh.con.sh）响应快但返回错误页/小文件 → 期望大小用**多数投票**（可达源中出现最多的 size），防单一坏源带偏
 - GitHub release 资产不提供 SHA256 字段，APK 类文件建议用签名校验作为最终权威验证
 
-### Phase 3c — Package manager mirrors
+**安全硬规则**：prefix 型代理本质是第三方中间人。凡是**可执行文件 / 安装包 / 脚本**
+（.exe .msi .apk .deb .dmg .pkg .sh .zip 内含可执行物等），下载后**必须**校验
+SHA256（`--sha256`）或发布方签名，校验通过才允许执行——即使下载流程提示"成功"。
+纯数据文件（文档、数据集）可放宽为可选校验。
 
-Present relevant entries from the `tools` category:
-- npm: `npm config set registry https://registry.npmmirror.com`
-- pip: `pip install -i https://pypi.tuna.tsinghua.edu.cn/simple <package>`
-- Go: `go env -w GOPROXY=https://goproxy.cn,direct`
-- apt (Ubuntu/Debian): replace `archive.ubuntu.com` with the top-scored apt mirror
-- Homebrew: `export HOMEBREW_API_DOMAIN="https://mirrors.tuna.tsinghua.edu.cn/homebrew-bottles/api"` (see mirror notes)
-- Rust (crates.io): `export CARGO_REGISTRIES_CRATES_IO_PROTOCOL=sparse` + set rsproxy.cn sparse index
-- Composer / RubyGems / Gradle / Maven: set registry/base URL to the top-scored mirror for the region
+**平台兼容性**：本 skill 的脚本基于 bash + GNU coreutils（curl/awk/stat/sha256sum）。
+- Linux / macOS / Termux / proot：开箱即用
+- **Windows**：必须在 Git Bash 或 WSL 内运行，不要用 cmd / PowerShell 直接调用
+  （`stat -c%s`、`sha256sum` 等命令在原生 Windows 不存在）
 
 ### Phase 4 — Dynamic testing & sorting
 
@@ -156,15 +168,27 @@ bash scripts/test_mirrors.sh --type all --output /tmp/mirror_test_results.json
 
 # Update scores in mirrors.json
 python3 scripts/update_mirrors.py --input /tmp/mirror_test_results.json
+
+# Deep mode (slower): additionally measure real 1MB download throughput
+# through each github prefix proxy (writes throughput_bps into mirrors.json)
+bash scripts/test_mirrors.sh --type github --deep --output /tmp/gh_result.json
 ```
 
-The test script uses `curl` to time each mirror's response. The update script recalculates scores using:
+The test script uses `curl` to time each mirror's response. The update script recalculates scores using a **log scale**:
 ```
-score = max(0, round(100 - response_time_seconds * 2))
+score = max(0, round(100 - 20 * log10(1 + response_time_seconds / 0.1)))
 ```
+This spreads the useful range: 100ms → 94, 500ms → 84, 1s → 79, 3s → 70, 30s → 50 —
+fast mirrors no longer all saturate at 99. Ties are broken by actual latency
+(`test_time_ms` ascending), and by measured throughput when deep-mode data exists.
+
 Mirrors that fail (timeout / connection error) get score 0 and status `deprecated` after 3 consecutive failures.
 
-The repository also ships `.github/workflows/mirror-test.yml` — a weekly GitHub Actions run of the same full test that posts a health summary to the Actions page. **CI monitors survival only and never writes back scores**: GitHub's datacenter network differs from real user networks, so scoring must stay local (`test_mirrors.sh` → `update_mirrors.py`).
+Other update-script modes:
+- `--rescore` — recompute all scores from stored latency (e.g. after a formula change, no re-test needed)
+- `--input results.json --record-alive` — record a CI survival snapshot (`last_ci_alive` field) without touching scores
+
+The repository also ships `.github/workflows/mirror-test.yml` — a weekly GitHub Actions run of the same full test that posts a health summary and stamps `last_ci_alive` on mirrors that responded. **CI never writes back scores**: GitHub's datacenter network differs from real user networks, so scoring must stay local (`test_mirrors.sh` → `update_mirrors.py`).
 
 ## Self-Evolution Protocol
 
@@ -175,6 +199,7 @@ This skill is designed to evolve indefinitely. The AI agent using this skill has
 - **`references/mirrors.json`** — Add new mirrors, update scores, change status, append to `evolution_log`
 - **`references/docker-mirrors-guide.md`** — Update with new findings, configurations, or tips
 - **`references/github-mirrors-guide.md`** — Update with new findings, configurations, or tips
+- **`references/package-managers-guide.md`** — Update with new findings, configurations, or tips
 - **`scripts/test_mirrors.sh`** — Improve testing logic or add new test types
 - **`scripts/update_mirrors.py`** — Improve scoring algorithm or add features
 
@@ -209,16 +234,23 @@ When discovering a new mirror (via search, user input, or testing):
 
 ## Scoring System
 
-| Range | Rating | Meaning |
-|-------|--------|---------|
-| 90–100 | 极速 | Response < 7s, enterprise-grade or top community |
-| 80–89 | 优秀 | Response 7–10s, reliable |
-| 70–79 | 良好 | Response 10–15s, usable |
-| 50–69 | 一般 | Response 15–30s or untested-but-known |
-| 30–49 | 慢 | Response > 30s, use as last resort |
-| 0–29 | 不可用 | Failed/timeout/deprecated |
+Log-scale formula (v1.3.0): `score = max(0, round(100 - 20 * log10(1 + t_s / 0.1)))`
 
-Initial scores are based on 2025-06-15 community testing data from jishuzhan.net. Scores are refreshed by running the test scripts.
+| Range | Rating | Response time |
+|-------|--------|---------------|
+| 95–100 | 极速 | < 100ms |
+| 90–94 | 优秀 | 100–220ms |
+| 80–89 | 良好 | 220ms–0.9s |
+| 70–79 | 可用 | 0.9–3s |
+| 50–69 | 慢 | 3–30s (or untested default) |
+| 0–49 | 不可用 | > 30s / failed / deprecated |
+
+Untested mirrors default to score 50. When several mirrors share a score,
+rank by stored latency (`test_time_ms`) and, if available, throughput
+(`throughput_bps` from deep mode).
+
+Initial scores are based on 2025-06-15 community testing data from jishuzhan.net
+(rescaled to the current formula). Scores are refreshed by running the test scripts.
 
 ## Strategy Guidelines
 
