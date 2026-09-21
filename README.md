@@ -93,7 +93,35 @@ bash scripts/accel-fetch.sh \
 
 # 仅列出当前可用的 prefix 型加速源（不下载）
 bash scripts/accel-fetch.sh --list
+
+# 指定引擎（auto 默认：aria2 多线程 → curl → axel 自动回退）
+bash scripts/accel-fetch.sh https://github.com/user/repo/archive/refs/heads/main.zip --engine aria2
+
+# 下载后校验 SHA256（哈希不匹配自动清理文件并视为失败）
+bash scripts/accel-fetch.sh https://github.com/.../app.zip --sha256 675782187ea46d3cbd6faf6c0ca7f9b47f1dd04545e22fa9106457efbef22803
 ```
+
+### 下载器自检与安装（首次使用前）
+
+`accel-fetch.sh` 依赖 `aria2`（多线程主力）、`curl`（单线程兜底）、`axel`（备用多线程）三件套。首次使用前先跑自检：
+
+```bash
+bash scripts/accel-fetch.sh --doctor
+```
+
+缺失时按平台安装：
+
+| 平台 | 安装命令 |
+|---|---|
+| Debian / Ubuntu（含 proot 环境） | `sudo apt-get update && sudo apt-get install -y aria2 curl axel` |
+| CentOS / RHEL / Fedora | `sudo yum install -y aria2 curl axel`（或 `dnf`） |
+| Alpine | `apk add aria2 curl axel` |
+| macOS | `brew install aria2 curl axel` |
+| Termux | `pkg install aria2 curl axel` |
+
+装完再跑一次 `bash scripts/accel-fetch.sh --doctor` 确认 3/3 全绿，即可正常下载。
+
+> 💡 **如何工作**：脚本优先用 aria2 16×16 多线程加速（经代理容易 Range 不完整，故每轮都做大小校验，失败自动换 curl/axel/下一候选源）；还会对多个可达源探测到的文件大小做**多数投票**，识破返回错误页的"假快"坏源。
 
 ### 方式二：手工指定代理（查库选源）
 
