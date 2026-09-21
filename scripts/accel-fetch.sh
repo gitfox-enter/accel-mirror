@@ -31,6 +31,10 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+# Git Bash / MSYS 兼容：把 /c/... 风格路径转成 C:/...，否则 Windows 版 python 无法读取
+if command -v cygpath &>/dev/null; then
+    SCRIPT_DIR="$(cygpath -m "$SCRIPT_DIR")"
+fi
 MIRRORS_FILE="${SCRIPT_DIR}/references/mirrors.json"
 
 URL=""
@@ -147,10 +151,12 @@ if [[ "${DOCTOR:-0}" -eq 1 ]]; then
 fi
 
 # ---------------- 列出 prefix 型可用代理（按分数降序） ----------------
+# MIRRORS_FILE 通过 argv 传入（避免路径插值注入风险）
 list_candidates() {
-    python3 -c "
+    python3 - "$MIRRORS_FILE" <<'PY' 2>/dev/null
 import json, sys
-with open('$MIRRORS_FILE') as f:
+sys.stdout.reconfigure(newline='\n')  # 防 Windows python 输出 \r\n
+with open(sys.argv[1]) as f:
     data = json.load(f)
 mirrors = data.get('mirrors', {}).get('github', [])
 seen = set()
@@ -165,8 +171,8 @@ for m in mirrors:
     if url in seen:
         continue
     seen.add(url)
-    print(f\"{m.get('name','')}|{url}|{m.get('score', 0)}\")
-" 2>/dev/null
+    print(f"{m.get('name','')}|{url}|{m.get('score', 0)}")
+PY
 }
 
 # ---------------- 探测与下载 ----------------
@@ -179,14 +185,19 @@ probe_one() {
     local proxy="$1"
     local target="$2"
     local accel_url="${proxy}/${target}"
-    local hdr result time_total http_code time_ms total size
-    hdr=$(curl -o /dev/null -s -L \
+    local hdrfile result time_total http_code time_ms total size
+    hdrfile="$(mktemp)"
+    # 避免 `-o /dev/null` 在 MSYS/Git Bash 下的 exit 23 假阴性:
+    # 响应头写临时文件，body 由 shell 丢弃，-w 指标经 %{stderr} 输出后捕获
+    result=$(curl -s -L \
         -r 0-1023 \
-        -D - \
-        -w '%{time_total}|%{http_code}|%{size_download}' \
+        -D "$hdrfile" \
+        -w '%{stderr}%{time_total}|%{http_code}|%{size_download}' \
         --connect-timeout "$TIMEOUT" \
         --max-time "$((TIMEOUT * 3))" \
-        "$accel_url" 2>/dev/null || echo '0.00|000|0')
+        "$accel_url" 2>&1 >/dev/null || echo '0.00|000|0')
+    hdr="$(cat "$hdrfile" 2>/dev/null || true)"
+    rm -f "$hdrfile"
     # 最后一行是 -w 输出，前面是响应头
     result="$(printf '%s\n' "$hdr" | tail -1)"
     time_total="${result%%|*}"
