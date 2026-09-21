@@ -9,6 +9,9 @@ Usage:
     # Update scores from test results file
     python3 update_mirrors.py --input /tmp/mirror_results.json
 
+    # Crowd-sourced aggregation: merge many anonymised reports, score by median
+    python3 update_mirrors.py --aggregate reports/*.json --min-samples 3
+
     # Add a new mirror
     python3 update_mirrors.py --add --name "new-mirror" \\
         --url "https://example.com" --category docker_community \\
@@ -27,6 +30,7 @@ Usage:
 import json
 import argparse
 import math
+import statistics
 import sys
 import os
 from datetime import datetime
@@ -36,8 +40,22 @@ from pathlib import Path
 SCRIPT_DIR = Path(__file__).resolve().parent.parent
 MIRRORS_FILE = SCRIPT_DIR / "references" / "mirrors.json"
 
+
+def set_mirrors_file(path):
+    """Override the database path (used by --db, and by tests on a copy)."""
+    global MIRRORS_FILE
+    MIRRORS_FILE = Path(path).resolve()
+
 # Categories that should be sorted by score
-SORTED_CATEGORIES = ["docker_community", "docker_enterprise", "github", "tools"]
+SORTED_CATEGORIES = [
+    "docker_community",
+    "docker_enterprise",
+    "github",
+    "tools",
+    "ai_models",
+    "python",
+    "dev_registry",
+]
 
 # Failure threshold: after N consecutive failures, deprecate
 FAILURE_THRESHOLD = 3
@@ -297,6 +315,143 @@ def rescore(data):
     return updated
 
 
+def aggregate_reports(data, report_paths, min_samples=1):
+    """Merge many anonymised test reports and rescore by MEDIAN.
+
+    Why median instead of mean: one report from a bad network (or a mirror that
+    answered in 30s exactly once) would drag a mean; the median of N independent
+    reports is the robust "group consensus" and is what makes the score
+    meaningful to somebody who has never run the test themselves.
+
+    Reports are `test_mirrors.sh --output X.json` outputs, ideally
+    contributed via GitHub Issues. Only latency + status are read — those files
+    contain no IP / path / user id (see their `meta.privacy` field).
+
+    Mirrors that only ever failed are deprecated, but only when they failed in
+    at least FAILURE_THRESHOLD reports AND never succeeded in any of them.
+    """
+    reports = []
+    for p in report_paths:
+        if not os.path.exists(p):
+            print(f"  ⚠️ 跳过不存在的上报文件: {p}")
+            continue
+        with open(p, "r", encoding="utf-8") as f:
+            reports.append((p, json.load(f)))
+    if not reports:
+        print("❌ 没有可读取的上报文件")
+        return 0, 0, 0
+
+    samples = {}    # (category, name) -> [ms, ...]
+    failures = {}   # (category, name) -> 失败次数
+    labels = []
+    for _, rep in reports:
+        label = str((rep.get("meta") or {}).get("network_label") or "").strip()
+        if label and label not in labels:
+            labels.append(label)
+        for cat, rows in (rep.get("results") or {}).items():
+            for row in rows or []:
+                key = (cat, row.get("name"))
+                t = row.get("time_ms")
+                if row.get("status") == "ok" and isinstance(t, int) and t > 0:
+                    samples.setdefault(key, []).append(t)
+                elif row.get("status") == "failed":
+                    failures[key] = failures.get(key, 0) + 1
+
+    print(f"📥 读取上报: {len(reports)} 份"
+          + (f"（网络标签: {', '.join(labels[:8])}{'…' if len(labels) > 8 else ''}）" if labels else ""))
+
+    # ---- 1) 有成功样本的源：按中位数重算 ----
+    updated = skipped = 0
+    movers = []
+    for cat in SORTED_CATEGORIES:
+        for mirror in data.get("mirrors", {}).get(cat, []):
+            key = (cat, mirror.get("name", ""))
+            times = samples.get(key, [])
+            if len(times) < min_samples:
+                # 只在「有样本但不够」时计入 skipped；纯失败记录另算
+                if key in samples:
+                    skipped += 1
+                continue
+            median = int(statistics.median(times))
+            old_score = mirror.get("score", 0)
+            new_score = calculate_score(median)
+            mirror["score"] = new_score
+            mirror["test_time_ms"] = median
+            mirror["samples"] = len(times)
+            mirror["latency_min_ms"] = min(times)
+            mirror["latency_max_ms"] = max(times)
+            mirror["last_tested"] = datetime.now().strftime("%Y-%m-%d")
+            if mirror.get("status") == "deprecated":
+                mirror["status"] = "active"
+                mirror["consecutive_failures"] = 0
+                print(f"  🔄 复活: {key[1]}（{len(times)} 份上报中位数 {median}ms）")
+            updated += 1
+            if new_score != old_score:
+                movers.append((old_score, new_score, key[1], median, len(times)))
+            else:
+                movers.append((old_score, new_score, key[1], median, len(times)))
+
+    # ---- 2) 失败记录：有过成功就不弃用，但把失败次数照记下来 ----
+    # 「既能成功又偶尔失败」说明源不稳定，这是有价值的信号，不能因为
+    # 有成功样本就把失败次数丢掉。只有在「零成功 且 失败达到阈值」时才弃用。
+    fail_deprecated = 0
+    flaky = 0
+    for cat in SORTED_CATEGORIES:
+        for mirror in data.get("mirrors", {}).get(cat, []):
+            key = (cat, mirror.get("name", ""))
+            fails = failures.get(key, 0)
+            if not fails:
+                continue
+            mirror["failed_reports"] = fails
+            has_success = bool(samples.get(key))
+            if has_success:
+                if fails >= FAILURE_THRESHOLD:
+                    flaky += 1
+                continue
+            if fails < FAILURE_THRESHOLD:
+                flaky += 1
+                continue
+            if mirror.get("status") != "deprecated":
+                mirror["status"] = "deprecated"
+                mirror["score"] = 0
+                mirror["consecutive_failures"] = fails
+                print(f"  🗑️ 弃用: {key[1]}（{fails}/{len(reports)} 份上报全部失败，无任何成功记录）")
+                log_evolution(
+                    data, "deprecated",
+                    f"'{key[1]}' deprecated: failed in {fails}/{len(reports)} crowd reports "
+                    f"with zero successes")
+                fail_deprecated += 1
+
+    # ---- 3) 记录汇总，便于追溯数据可信度 ----
+    data["last_full_test"] = datetime.now().strftime("%Y-%m-%d")
+    data["crowd"] = {
+        "reports": len(reports),
+        "network_labels": labels[:20],
+        "aggregated_at": datetime.now().strftime("%Y-%m-%d"),
+        "min_samples": min_samples,
+        "method": "median of per-report latency (robust to single-network outliers)",
+        "updated_mirrors": updated,
+        "skipped_mirrors": skipped,
+        "deprecated_mirrors": fail_deprecated,
+    }
+    log_evolution(
+        data, "crowd_aggregated",
+        f"Merged {len(reports)} crowd report(s)"
+        + (f" [labels: {', '.join(labels[:8])}]" if labels else "")
+        + f": {updated} mirrors rescored by median (min_samples={min_samples}), "
+          f"{skipped} skipped, {fail_deprecated} deprecated, {flaky} flaky-only")
+
+    print(f"\n📊 聚合结果: {updated} 个源按中位数重算, {skipped} 个样本不足被跳过, "
+          f"{fail_deprecated} 个被弃用"
+          + (f", {flaky} 个在部分上报中失败但未达阈值（只记录不扣分）" if flaky else ""))
+    if movers:
+        print("\n  变化最大的 10 个（旧分 → 新分 | 中位延迟 | 样本数）:")
+        for old, new, name, median, n in sorted(
+                movers, key=lambda x: -abs(x[1] - x[0]))[:10]:
+            print(f"    {old:3d} → {new:3d}  {name}  ({median}ms, {n} 份)")
+    return updated, fail_deprecated, skipped
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Update mirror scores and manage the mirror database.",
@@ -304,6 +459,7 @@ def main():
         epilog="""
 Examples:
   %(prog)s --input /tmp/results.json
+  %(prog)s --aggregate reports/*.json --min-samples 3
   %(prog)s --add --name "new-mirror" --url "https://example.com" --category docker_community
   %(prog)s --deprecate --name "dead-mirror"
   %(prog)s --revive --name "restored-mirror"
@@ -312,6 +468,11 @@ Examples:
     )
 
     parser.add_argument("--input", "-i", help="Path to test results JSON file")
+    parser.add_argument("--aggregate", nargs="+", metavar="REPORT",
+                        help="合并多份匿名上报（test_mirrors.sh 的输出）并取中位数重算分数")
+    parser.add_argument("--min-samples", type=int, default=1,
+                        help="配合 --aggregate: 一个源至少被几份上报覆盖才重算（默认 1）")
+    parser.add_argument("--db", help="覆盖 mirrors.json 路径（默认 references/mirrors.json）")
     parser.add_argument("--add", action="store_true", help="Add a new mirror")
     parser.add_argument("--deprecate", action="store_true", help="Deprecate a mirror")
     parser.add_argument("--revive", action="store_true", help="Revive a deprecated mirror")
@@ -329,6 +490,10 @@ Examples:
 
     args = parser.parse_args()
 
+    # 允许用 --db 指向别的数据库（测试时对副本操作，不动真库）
+    if args.db:
+        set_mirrors_file(args.db)
+
     # Load database
     if not MIRRORS_FILE.exists():
         print(f"❌ mirrors.json not found at {MIRRORS_FILE}")
@@ -337,7 +502,11 @@ Examples:
     data = load_mirrors()
 
     # Handle different modes
-    if args.input:
+    if args.aggregate:
+        print(f"👥 众包聚合: {len(args.aggregate)} 份上报, min_samples={args.min_samples}\n")
+        aggregate_reports(data, args.aggregate, args.min_samples)
+
+    elif args.input:
         if not os.path.exists(args.input):
             print(f"❌ Test results file not found: {args.input}")
             sys.exit(1)

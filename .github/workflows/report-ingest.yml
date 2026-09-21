@@ -1,0 +1,95 @@
+name: Crowd report ingest
+
+# 众包数据飞轮：陌生人把本机实测结果贴进 issue 表单，这里自动入库 + 聚合 + 重建看板。
+# 这是本项目唯一「不需要 fork、不需要 PR、不需要懂 git」的贡献路径。
+on:
+  issues:
+    types: [opened, edited]
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: report-ingest-${{ github.event.issue.number }}
+  cancel-in-progress: false
+
+jobs:
+  ingest:
+    # 只处理实测上报：issue 表单里埋了隐藏标记，或带了 network-report 标签。
+    # 普通 issue（bug、建议）不会触发任何写操作。
+    if: contains(github.event.issue.body, '<!-- accel-mirror-report -->') || contains(github.event.issue.labels.*.name, 'network-report')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # continue-on-error：解析失败时也要走到下面的「回复 issue」，把原因告诉提交者，
+      # 最后一步再把 job 判失败，保证失败在 Actions 列表里可见。
+      - name: 解析并入库
+        id: ingest
+        continue-on-error: true
+        run: |
+          python3 scripts/ingest_report.py \
+            --event-file "$GITHUB_EVENT_PATH" \
+            --out-dir reports \
+            --summary-file "$RUNNER_TEMP/summary.md" \
+            --force
+
+      - name: 按中位数聚合
+        if: steps.ingest.outputs.written == 'true'
+        run: |
+          # shellcheck disable=SC2046
+          python3 scripts/update_mirrors.py --aggregate $(ls reports/*.json) --min-samples 3
+
+      - name: 重建数据看板
+        if: steps.ingest.outputs.written == 'true'
+        run: python3 scripts/build_dashboard.py
+
+      - name: 自检（保证入库后数据仍然自洽）
+        if: steps.ingest.outputs.written == 'true'
+        run: python3 scripts/selftest.py
+
+      - name: 提交
+        if: steps.ingest.outputs.written == 'true'
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add reports references/mirrors.json docs/index.html
+          if git diff --staged --quiet; then
+            echo "没有需要提交的变化（样本数未达到 --min-samples 阈值时属正常情况）"
+          else
+            git commit -m "data(crowd): 入库第 ${{ github.event.issue.number }} 号实测上报"
+            git push
+          fi
+
+      - name: 回复 issue
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+        run: |
+          if [ -f "$RUNNER_TEMP/summary.md" ]; then
+            gh issue comment "$ISSUE_NUMBER" --body-file "$RUNNER_TEMP/summary.md"
+          else
+            printf '%s\n' \
+              '❌ **这份上报没有通过校验，未写入数据库。**' \
+              '' \
+              '常见原因：' \
+              '- `my_report.json` 内容没有完整粘贴（缺少最外层大括号）' \
+              '- 正文里找不到带 `results` 字段的 JSON' \
+              '- 上报里的源名不在本库中（上报**只能更新已有源的分数**，不能新增源）' \
+              '- 有效样本少于 5 条（建议用 `--type all` 跑一次完整测速）' \
+              '' \
+              '具体原因见本次 Action 日志的 `解析并入库` 步骤。' > "$RUNNER_TEMP/reject.md"
+            gh issue comment "$ISSUE_NUMBER" --body-file "$RUNNER_TEMP/reject.md"
+          fi
+
+      - name: 校验失败则让本 job 失败
+        if: steps.ingest.outcome == 'failure'
+        run: |
+          echo "::error::上报未通过校验，见上一步 stderr"
+          exit 1

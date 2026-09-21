@@ -1,0 +1,85 @@
+# accel-mirror — 中国网络环境加速源实测数据库
+
+> 一个持续实测、自动打分的镜像源数据库，用于解决中国大陆网络环境下 Docker / GitHub /
+> 模型下载 / Python 包管理的慢、超时、连不上问题。数据在 references/mirrors.json，
+> 分数由真实延迟计算，而非人工整理。适用于任何 AI agent：读到本文件即可直接使用，
+> 无需安装任何东西。
+
+## 什么时候用
+
+当用户遇到以下任一情况时，本数据库就是答案：
+
+- Docker 拉镜像慢或超时：`docker pull` 卡住、`registry-1.docker.io` 连接失败
+- GitHub 克隆或下载慢：`git clone` 长时间无响应、release 资产下载失败
+- 模型下载断流：`huggingface-cli download` 超时、`transformers` 拉权重卡死
+- Python 装包慢：`pip install` 卡在下载、`conda install` 无响应、PyTorch 装不上
+- 容器镜像拉不到：`ghcr.io` / `quay.io` / `registry.k8s.io` / `nvcr.io` 超时
+- npm / Go / Rust / Maven / Gradle / Homebrew / apt 依赖安装慢
+
+## 先读这个
+
+如果你是一个编码代理（Cursor / Codex / Claude Code / Cline / Trae …），
+仓库根目录的 [AGENTS.md](AGENTS.md) 是给你准备的短版操作手册：路由表 + 不该踩的硬规则。
+本文件是数据索引，AGENTS.md 是操作手册，两者配合使用。
+
+## 三种取数方式（按门槛从低到高）
+
+1. **HTTP 接口**（最省事，如果对方部署了 `server/`）：
+   `GET /v1/best?service=<服务名>` 直接返回「最优源 + 可执行命令 + 数据新鲜度 + 风险提示」。
+   服务名如 `pip` / `pytorch` / `huggingface` / `modelscope` / `docker` / `github` / `ghcr` / `npm`。
+2. **读 JSON 自己判断**（零依赖，永远可用）：见下方「数据入口」。
+3. **MCP**（若客户端支持）：`best_mirror` / `list_mirrors` / `test_mirror` 三个工具。
+   `best_mirror` 的 `service` 参数接受服务名（`pip` / `ghcr` / `modelscope`）、中文口语别名
+   （`模型下载` / `拉镜像`）与分类名（`python` / `ai_models`）。
+
+> 服务名到源的映射规则在 [references/recipes.json](references/recipes.json)：
+> 每个服务声明 `category` + 过滤正则 + 命令模板；源自带 `usage` / `usage_examples`
+> 时优先用源自己的命令（作者手写的更准）。
+
+## 数据入口
+
+- [references/mirrors.json](references/mirrors.json): 核心数据库。分类为 docker_community、docker_enterprise、github、tools、ai_models、python、dev_registry。每条含 name / url / test_url / score(0-100) / status / test_time_ms / usage、以及可选的 samples / latency_min_ms / latency_max_ms / failed_reports / throughput_bps / last_ci_alive。
+- [references/recipes.json](references/recipes.json): 服务名 → 源 + 命令模板（25 个服务，含中文口语别名）。
+- [SKILL.md](SKILL.md): 完整工作流。按「用户说了什么 → 该做什么」组织，含可直接执行的命令模板。
+- [AGENTS.md](AGENTS.md): 面向编码代理的操作手册（路由 + 硬规则 + 文件地图）。
+- [README.md](README.md): 人类可读的项目说明与实测榜单。
+- [CONTRIBUTING.md](CONTRIBUTING.md): 贡献指南。用户想贡献数据时指到这里（提 issue 上报最快，不需要 git）。
+- [CHANGELOG.md](CHANGELOG.md): 变更日志。
+- [SECURITY.md](SECURITY.md): 安全策略与威胁模型（本项目最大风险是被污染的*推荐*）。
+- [reports/](reports/README.md): 众包上报存档与安全模型说明。
+
+## 场景指南
+
+- [references/docker-mirrors-guide.md](references/docker-mirrors-guide.md): Docker daemon.json 配置与排错
+- [references/github-mirrors-guide.md](references/github-mirrors-guide.md): GitHub 代理前缀、clone / 下载加速、自建方案
+- [references/ai-models-guide.md](references/ai-models-guide.md): HuggingFace 换源、断流续传、ModelScope / OpenXLab / OpenI / BAAI 选择策略
+- [references/package-managers-guide.md](references/package-managers-guide.md): npm / pip / conda / apt / Homebrew / Rust / Go / Maven 等换源
+
+## 工具
+
+- [server/accel_mirror_api.py](server/accel_mirror_api.py): 只读 HTTP 接口（零依赖），含 Docker 部署文件
+- [mcp_server/accel_mirror_mcp.py](mcp_server/accel_mirror_mcp.py): MCP Server（零依赖）
+- [scripts/test_mirrors.sh](scripts/test_mirrors.sh): 并发实测所有源。`--deep` 额外测真实吞吐；`--network-label` 产出匿名众包上报
+- [scripts/update_mirrors.py](scripts/update_mirrors.py): 按实测延迟重算分数、排序、弃用死链；`--aggregate` 合并多份上报取中位数
+- [scripts/accel-fetch.sh](scripts/accel-fetch.sh): 智能选源下载 GitHub 文件，自动回退 + 大小/哈希校验
+- [scripts/ingest_report.py](scripts/ingest_report.py): 把 GitHub Issue 表单转成规范众包上报。**这是信任边界**——上报逐行只保留 `{name, status, time_ms}`，且 `name` 必须已存在于 mirrors.json，因此上报能改已知源的分数、但永远不能新增源
+- [scripts/selftest.py](scripts/selftest.py): 无依赖自检（数据 + 配方 + API 语义 + 聚合规则 + 众包入库 + 分发层 + 文档一致性），129 项断言
+
+## 使用约定
+
+- 分数公式：`score = max(0, round(100 - 20 * log10(1 + 秒 / 0.1)))`，越接近 100 越快。
+- 同分时按 `test_time_ms` 升序，有 `throughput_bps` 时优先参考。
+- 优先选用 `status: "active"` 且分数最高的源；`deprecated` 表示连续 3 次实测失败。
+- 数据会腐烂：`last_full_test` 超过 7 天即提示用户重新实测。
+- 可信度边界：
+  - 分数来自社区实测（含单机实测），不同运营商 / 省份结果会有差异，属正常现象，
+    不要当作绝对排名。
+  - `samples` 为空 = 只有单机数据，尚无多份众包上报；`samples >= 3` 时该分是
+    多份上报的**中位数**，可信度更高。
+  - `failed_reports > 0` = 该源在多份上报中失败过（既能成功也会失败），属不稳定源，
+    用它时应同时准备备用源。
+- 不要向用户推荐未知的第三方「模型代理站」：模型文件被替换的风险高于收益。
+- 当用户想**贡献数据**时，给他这条路（不需要 fork 或 PR）：跑
+  `bash scripts/test_mirrors.sh --type all --output my_report.json --network-label "<城市 运营商 带宽>"`，
+  把 `my_report.json` 贴进仓库的「网络实测上报」issue 表单即可，Actions 会自动入库并回复。
+  分数要累计 3 份以上上报才会按中位数重算，所以前几份不会立刻改变排名——这是有意为之。

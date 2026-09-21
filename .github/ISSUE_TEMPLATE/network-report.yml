@@ -1,0 +1,71 @@
+name: 网络实测上报
+description: 把你本机跑出来的测速结果提交上来，让库里的分数反映真实网络（不需要 fork 或 PR）
+title: "[report] "
+labels: ["network-report"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        <!-- accel-mirror-report -->
+
+        ## 让库里的分数变得可信，只需要一条命令
+
+        本库的分数默认来自单机实测——**别人无法验证，也就无法真正依赖**。
+        你的一次上报能让它变成「群体共识」。
+
+        ### 第一步：在本机跑一次完整测速
+
+        ```bash
+        git clone https://github.com/gitfox-enter/accel-mirror
+        cd accel-mirror
+        bash scripts/test_mirrors.sh --type all --output my_report.json --network-label "你的网络标签"
+        ```
+
+        网络标签请写成「**城市 + 运营商 + 带宽**」的形式，例如 `北京联通 500M`、`广东电信 1000M`。
+        它只是为了区分地域差异，**不会**被当作身份信息。
+
+        ### 第二步：把 `my_report.json` 的内容整段粘到下面
+
+        > 隐私说明：该文件由脚本生成，**只含延迟与状态**，不含 IP、文件路径、用户名或设备信息。
+        > 入库时还会再做一次白名单过滤——只保留「库中已有源名 + 状态 + 毫秒数」，
+        > 你报告里的 `url` 字段会被丢弃，因此上报**无法新增镜像源**。
+
+        ### 第三步：提交，剩下的交给 Actions
+
+        机器人会自动入库并回复结果。分数要累计 **3 份以上**上报才会按中位数重算，
+        所以前几份不会立刻改变排名——这是有意为之：单个样本不该把分数定死。
+
+  - type: input
+    id: network_label
+    attributes:
+      label: 网络标签
+      description: 城市 + 运营商 + 带宽，例如「北京联通 500M」。留空也可以。
+      placeholder: 北京联通 500M
+    validations:
+      required: false
+
+  - type: textarea
+    id: report_json
+    attributes:
+      label: 实测结果 JSON
+      description: 把 my_report.json 的全部内容粘贴到这里（含最外层的大括号）。
+      render: json
+      placeholder: |
+        {
+          "meta": { "schema": 1, "network_label": "北京联通 500M", "privacy": "..." },
+          "results": {
+            "docker_community": [ { "name": "...", "url": "...", "time_ms": 480, "status": "ok" } ]
+          }
+        }
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: confirm
+    attributes:
+      label: 提交前确认
+      options:
+        - label: 我确认这份结果由 `scripts/test_mirrors.sh` 在本机真实跑出，不是编造或修改过的数据
+          required: true
+        - label: 我确认已检查粘贴内容中不含个人 IP、真实姓名或本机路径
+          required: false

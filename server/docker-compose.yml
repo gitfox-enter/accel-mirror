@@ -1,0 +1,36 @@
+# accel-mirror 只读 API —— Docker Compose
+#
+# 用法（在仓库根目录或 server/ 目录均可）：
+#   docker compose -f server/docker-compose.yml up -d --build
+#   curl -s http://127.0.0.1:8787/v1/best?service=pip
+#   docker compose -f server/docker-compose.yml logs -f
+#   docker compose -f server/docker-compose.yml down
+#
+# 数据更新后需要重建镜像把新的 mirrors.json 拷进去：
+#   git pull && docker compose -f server/docker-compose.yml up -d --build
+
+services:
+  accel-mirror-api:
+    build:
+      context: ..
+      dockerfile: server/Dockerfile
+    image: accel-mirror-api:1.0.0
+    container_name: accel-mirror-api
+    ports:
+      - "8787:8787"
+    restart: unless-stopped
+    # 无状态、只读：不需要持久化卷，也不让容器改文件系统
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    # 想让容器直接跟随宿主机上的仓库（改库即生效、无需重建）就打开下面这两行
+    # volumes:
+    #   - ../references:/app/references:ro
+    environment:
+      - TZ=Asia/Shanghai
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8787/v1/health', timeout=4).status == 200 else 1)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s

@@ -1,0 +1,203 @@
+{
+  "version": "1.0.0",
+  "description": "服务名 → 如何从 mirrors.json 里选出最优源，并给出可直接执行的命令。HTTP API（server/）与 MCP Server（mcp_server/）共用本文件，避免两处逻辑漂移。",
+  "_schema": {
+    "aliases": "调用方可能使用的服务名（英文与中文口语都可），大小写不敏感",
+    "category": "在 mirrors.json 的哪个分类里找源",
+    "match": "可选，对源 name 做不区分大小写的正则过滤；null 表示该分类全部源都算",
+    "url_suffix": "可选，当源 url 缺少该后缀时自动补上（如 pip 的 /simple）；已包含则不重复追加",
+    "command": "兜底命令模板。仅在源自身没有 usage / usage_examples 字段时使用，{url} 会被替换为源地址",
+    "usage_prefer": "可选，从源的 usage_examples 里优先挑选包含该子串的那条（如 git clone）",
+    "persist": "可选，把该源持久化到配置文件的写法（{url} 同样会被替换）",
+    "guide": "可选，对应的详细文档"
+  },
+  "services": {
+    "docker": {
+      "aliases": ["docker", "dockerhub", "docker-hub", "docker hub", "镜像加速", "docker拉取", "docker pull"],
+      "category": "docker_community",
+      "match": null,
+      "strip_scheme": true,
+      "command": "docker pull {url}/library/<image>:<tag>",
+      "persist": "写入 /etc/docker/daemon.json（Windows: Docker Desktop → Settings → Docker Engine）: {\"registry-mirrors\": [\"{url}\"]}",
+      "guide": "references/docker-mirrors-guide.md"
+    },
+    "docker-enterprise": {
+      "aliases": ["docker-enterprise", "swr", "acr", "企业镜像", "华为云swr", "阿里云acr"],
+      "category": "docker_enterprise",
+      "match": null,
+      "strip_scheme": true,
+      "command": "docker pull {url}/<namespace>/<image>:<tag>",
+      "guide": "references/docker-mirrors-guide.md"
+    },
+    "github": {
+      "aliases": ["github", "git", "gitclone", "git clone", "clone", "release", "release下载", "ghproxy", "github加速", "github打不开"],
+      "category": "github",
+      "match": null,
+      "exclude_types": ["web"],
+      "command_by_type": {
+        "prefix": "git clone {url}/https://github.com/<owner>/<repo>.git",
+        "domain": "git clone {url}/github.com/<owner>/<repo>.git",
+        "web": "打开 {url} 粘贴仓库链接（网页工具，适合手动下载单个文件）"
+      },
+      "command": "git clone {url}/https://github.com/<owner>/<repo>.git",
+      "usage_prefer": "git clone",
+      "guide": "references/github-mirrors-guide.md"
+    },
+    "ghcr": {
+      "aliases": ["ghcr", "ghcr.io"],
+      "category": "dev_registry",
+      "match": "ghcr",
+      "strip_scheme": true,
+      "command": "docker pull {url}/<owner>/<image>:<tag>"
+    },
+    "quay": {
+      "aliases": ["quay", "quay.io"],
+      "category": "dev_registry",
+      "match": "quay",
+      "strip_scheme": true,
+      "command": "docker pull {url}/<org>/<image>:<tag>"
+    },
+    "gcr": {
+      "aliases": ["gcr", "gcr.io"],
+      "category": "dev_registry",
+      "match": "gcr",
+      "strip_scheme": true,
+      "command": "docker pull {url}/<project>/<image>:<tag>"
+    },
+    "k8s": {
+      "aliases": ["k8s", "kubernetes", "k8s.gcr.io", "registry.k8s.io", "pause"],
+      "category": "dev_registry",
+      "match": "k8s|kubernetes",
+      "strip_scheme": true,
+      "command": "docker pull {url}/<image>:<tag>"
+    },
+    "nvcr": {
+      "aliases": ["nvcr", "nvcr.io", "ngc", "nvidia", "cuda镜像"],
+      "category": "dev_registry",
+      "match": "nvcr|ngc",
+      "strip_scheme": true,
+      "command": "docker pull {url}/<org>/<image>:<tag>"
+    },
+    "pip": {
+      "aliases": ["pip", "pypi", "pip install", "python包", "装python包", "py包"],
+      "category": "python",
+      "match": "pypi|pip",
+      "url_suffix": "/simple",
+      "command": "pip install -i {url} <package>",
+      "persist": "pip config set global.index-url {url}",
+      "guide": "references/package-managers-guide.md"
+    },
+    "pytorch": {
+      "aliases": ["pytorch", "torch", "装torch", "torch装不上", "cuda轮子"],
+      "category": "python",
+      "match": "pytorch|torch",
+      "command": "pip install torch --index-url {url}",
+      "guide": "references/package-managers-guide.md"
+    },
+    "conda": {
+      "aliases": ["conda", "anaconda", "miniconda", "condarc"],
+      "category": "python",
+      "match": "conda",
+      "command": "conda config --add channels {url}",
+      "guide": "references/package-managers-guide.md"
+    },
+    "huggingface": {
+      "aliases": ["huggingface", "hf", "hf-mirror", "模型下载", "huggingface-cli", "transformers下载", "权重下载"],
+      "category": "ai_models",
+      "match": "hf-mirror|hugging",
+      "command": "export HF_ENDPOINT={url}",
+      "guide": "references/ai-models-guide.md"
+    },
+    "modelscope": {
+      "aliases": ["modelscope", "魔搭", "modelscope下载"],
+      "category": "ai_models",
+      "match": "modelscope",
+      "command": "pip install modelscope && modelscope download --model <org>/<name>",
+      "guide": "references/ai-models-guide.md"
+    },
+    "openxlab": {
+      "aliases": ["openxlab", "浦源", "书生", "openxlab下载"],
+      "category": "ai_models",
+      "match": "openxlab",
+      "command": "pip install openxlab && openxlab model download --model-repo <org>/<name>",
+      "guide": "references/ai-models-guide.md"
+    },
+    "ai-models": {
+      "aliases": ["ai", "model", "models", "模型", "模型源", "权重", "llm模型下载", "ollama模型"],
+      "category": "ai_models",
+      "match": null,
+      "command": "pip install modelscope && modelscope download --model <org>/<name>",
+      "guide": "references/ai-models-guide.md"
+    },
+    "npm": {
+      "aliases": ["npm", "node", "yarn", "pnpm", "nodejs"],
+      "category": "tools",
+      "match": "npm",
+      "command": "npm config set registry {url}",
+      "guide": "references/package-managers-guide.md"
+    },
+    "go": {
+      "aliases": ["go", "golang", "goproxy", "go proxy"],
+      "category": "tools",
+      "match": "go proxy|goproxy",
+      "command": "go env -w GOPROXY={url},direct",
+      "guide": "references/package-managers-guide.md"
+    },
+    "rust": {
+      "aliases": ["rust", "cargo", "crates", "crates.io", "rsproxy"],
+      "category": "tools",
+      "match": "crates|rsproxy",
+      "command": "export CARGO_REGISTRIES_CRATES_IO_PROTOCOL=sparse  # 并把 {url} 写入 ~/.cargo/config.toml 的 source 替换",
+      "guide": "references/package-managers-guide.md"
+    },
+    "maven": {
+      "aliases": ["maven", "m2", "settings.xml"],
+      "category": "tools",
+      "match": "maven",
+      "command": "在 ~/.m2/settings.xml 的 <mirrors> 中加入 <mirror><url>{url}</url><mirrorOf>central</mirrorOf></mirror>",
+      "guide": "references/package-managers-guide.md"
+    },
+    "gradle": {
+      "aliases": ["gradle", "gradle仓库"],
+      "category": "tools",
+      "match": "gradle",
+      "command": "在 init.gradle 中把所有 mavenCentral()/google() 指向 {url}",
+      "guide": "references/package-managers-guide.md"
+    },
+    "apt": {
+      "aliases": ["apt", "apt-get", "ubuntu", "debian", "sources.list"],
+      "category": "tools",
+      "match": "apt",
+      "command": "替换 /etc/apt/sources.list 中的 archive.ubuntu.com 为 {url}",
+      "guide": "references/package-managers-guide.md"
+    },
+    "homebrew": {
+      "aliases": ["brew", "homebrew", "mac装包慢"],
+      "category": "tools",
+      "match": "homebrew|brew",
+      "command": "export HOMEBREW_API_DOMAIN={url}  # 并设置 HOMEBREW_BOTTLE_DOMAIN",
+      "guide": "references/package-managers-guide.md"
+    },
+    "rubygems": {
+      "aliases": ["gem", "rubygems", "ruby"],
+      "category": "tools",
+      "match": "rubygem",
+      "command": "gem sources --add {url} --remove https://rubygems.org/",
+      "guide": "references/package-managers-guide.md"
+    },
+    "composer": {
+      "aliases": ["composer", "php", "packagist"],
+      "category": "tools",
+      "match": "composer",
+      "command": "composer config -g repo.packagist composer {url}",
+      "guide": "references/package-managers-guide.md"
+    },
+    "git-proxy": {
+      "aliases": ["git代理", "insteadof", "hosts", "hosts方案", "dev-sidecar", "全局代理"],
+      "category": "tools",
+      "match": "insteadOf|hosts|sidecar",
+      "command": "git config --global url.\"{url}/https://\".insteadOf https://",
+      "guide": "references/github-mirrors-guide.md"
+    }
+  }
+}

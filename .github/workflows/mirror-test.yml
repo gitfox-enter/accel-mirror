@@ -30,6 +30,26 @@ jobs:
           bash -n scripts/test_mirrors.sh
           bash -n scripts/accel-fetch.sh
           python3 -m py_compile scripts/update_mirrors.py
+          python3 -m py_compile scripts/build_dashboard.py
+          python3 -m py_compile scripts/selftest.py
+          python3 -m py_compile mcp_server/accel_mirror_mcp.py
+          python3 -m py_compile server/accel_mirror_api.py
+
+      - name: 自检（数据完整性 + 配方 + API 语义 + 聚合规则）
+        run: |
+          # 语义断言：例如 docker 命令不能带 scheme、github 不能返回网页工具、
+          # 配方引用的 guide 文件必须存在、聚合必须取中位数而不是均值
+          python3 scripts/selftest.py
+          python3 server/accel_mirror_api.py --self-test
+
+      - name: 生成数据看板
+        run: python3 scripts/build_dashboard.py
+
+      - name: MCP Server 冒烟测试
+        run: |
+          echo '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' \
+            | python3 mcp_server/accel_mirror_mcp.py \
+            | python3 -c "import json,sys; d=json.load(sys.stdin); print([t['name'] for t in d['result']['tools']])"
 
       - name: 运行全量测速
         run: |
@@ -85,16 +105,15 @@ jobs:
         run: |
           python3 scripts/update_mirrors.py --input mirror_test_results.json --record-alive
 
-      - name: 提交存活快照
-        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+      - name: 提交看板与存活快照
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add references/mirrors.json
+          git add docs/index.html references/mirrors.json
           if git diff --cached --quiet; then
             echo "无变化，跳过提交"
           else
-            git commit -m "ci: weekly survival snapshot -> last_ci_alive (scores untouched)"
+            git commit -m "ci: refresh dashboard + survival snapshot (scores untouched)"
             git push
           fi
 

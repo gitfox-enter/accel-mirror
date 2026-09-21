@@ -1,0 +1,41 @@
+---
+description: 国内网络加速镜像源数据库 —— 处理 Docker / GitHub / HuggingFace / pip 下载慢、超时、连不上时，查 references/mirrors.json 取实测最优源，不要凭记忆猜镜像地址
+globs:
+alwaysApply: true
+---
+
+# accel-mirror
+
+本仓库是**持续实测、自动打分的国内加速镜像数据库**。用户抱怨「下载慢 / 超时 / 连不上 / 装不上」
+时先查库再动手——镜像存活率变化极快，训练语料里的镜像地址大概率已经死了。
+
+## 用法
+
+1. 读 `references/mirrors.json`，在目标分类取 `status == "active"` 且 `score`（0–100）最高者；
+2. 用该源自带的 `usage` / `usage_examples` 拼命令（作者手写并实测过，比自拼 URL 准）；
+3. 服务名 → 分类 + 命令模板见 `references/recipes.json`（25 个服务，含中文口语别名）。
+
+| 用户说 | 分类 |
+|---|---|
+| docker pull 卡住 | `docker_community`（写 `daemon.json` 的 `registry-mirrors`） |
+| ghcr.io / registry.k8s.io / nvcr.io 拉不下来 | `dev_registry`（换镜像名前缀） |
+| git clone 慢 / GitHub 打不开 | `github`（代理前缀 / `url.insteadOf`） |
+| HuggingFace 模型断流 | `ai_models`（`HF_ENDPOINT`，必须在 import transformers 之前设） |
+| pip / conda / PyTorch 装不上 | `python` |
+| npm / go / apt / brew / maven 慢 | `tools` |
+
+更多细节见 [AGENTS.md](AGENTS.md)。
+
+## 硬规则
+
+- `docker pull` 的镜像引用**不能出现 `https://`**。
+- 下载**可执行文件 / 安装包**必须校验 SHA256 或发布方签名后才允许执行。
+- **不要推荐未知的第三方「模型代理站」**（模型权重被替换的风险高于收益）。
+- `last_full_test` 超 7 天 → 提示用户重新实测；接口返回的 `caveats` 一并转达。
+
+## 改完自检
+
+```bash
+python3 scripts/selftest.py                       # 129 项语义断言
+python3 server/accel_mirror_api.py --self-test
+```

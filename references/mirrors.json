@@ -1,7 +1,7 @@
 {
-  "version": "1.3.0",
+  "version": "1.7.0",
   "last_updated": "2026-09-21",
-  "last_full_test": "2026-09-12",
+  "last_full_test": "2026-09-21",
   "test_environment": "Home broadband NAS, jishuzhan.net 2025-06-15 community test",
   "scoring": {
     "formula": "score = max(0, round(100 - 20 * log10(1 + response_time_seconds / 0.1)))",
@@ -14,7 +14,24 @@
       "0-49": "不可用/已弃用"
     },
     "tie_break": "同分按 test_time_ms 升序，有 throughput_bps（--deep 实测吞吐）时优先参考",
-    "note": "v1.3.0 起改用对数刻度：头部镜像不再扎堆 99 分，分数与真实延迟差异对齐。旧分数已用 --rescore 从 test_time_ms 重算。"
+    "note": "v1.3.0 起改用对数刻度：头部镜像不再扎堆 99 分，分数与真实延迟差异对齐。旧分数已用 --rescore 从 test_time_ms 重算。",
+    "crowd": {
+      "method": "median of per-report latency across crowd reports",
+      "tool": "scripts/update_mirrors.py --aggregate reports/*.json --min-samples N",
+      "deprecate_rule": "zero successes AND failures >= 3",
+      "fields": [
+        "samples",
+        "latency_min_ms",
+        "latency_max_ms",
+        "failed_reports"
+      ],
+      "ingest": {
+        "tool": "scripts/ingest_report.py",
+        "channel": "GitHub Issue form (.github/ISSUE_TEMPLATE/network-report.yml -> .github/workflows/report-ingest.yml)",
+        "whitelist": "each row is reduced to {name,status,time_ms} and the name must already exist in this database",
+        "reason": "a crowd report may move the score of a known mirror but must never introduce a new URL; otherwise a forged '0ms mirror' would win the ranking and be recommended to every user of this library"
+      }
+    }
   },
   "evolution_log": [
     {
@@ -111,6 +128,46 @@
       "date": "2026-09-21",
       "action": "rescored",
       "details": "Recomputed scores from stored latency with current formula (81 mirrors changed)"
+    },
+    {
+      "date": "2026-09-21",
+      "action": "strategy_change",
+      "details": "v1.4.0: 面向国内 AI 开发者补齐三大痛点分类——ai_models（hf-mirror / ModelScope 魔搭 / WiseModel / OpenI 启智）、python（pip 腾讯云/中科大/华为云、conda 清华、PyTorch wheels 清华；原 tools 中的 pip 清华与 pypi 阿里移至此处）、dev_registry（ghcr/quay/gcr/k8s/nvcr 的 DaoCloud 与南大镜像、阿里云 google_containers）。同时新增 llms.txt（AI 代理入口索引）、mcp_server/（零依赖 MCP Server）、docs/（数据看板页）。"
+    },
+    {
+      "date": "2026-09-21",
+      "action": "added",
+      "details": "新增 3 个分类共 16 个源（ai_models 4 / python 5 / dev_registry 7），另从 tools 迁移 2 个 pip 源至 python。全部初始 score 50（未实测），待 test_mirrors.sh 实测后回写。"
+    },
+    {
+      "date": "2026-09-21",
+      "action": "updated_score",
+      "details": "新分类首轮实测校正：ModelScope API 路径 404 → 改用站点首页；OpenI 原 git.openi.org.cn 连接失败 → 改用平台规范域名 openi.pcl.ac.cn；清华 pytorch-wheels 路径已 404 → 替换为实测可达的阿里源并补上海交大备用；华为云 PyPI 对 curl 默认 UA 持续返回 429，为避免误判弃用已移除；新增 OpenXLab 浦源、BAAI 智源两个模型仓库。"
+    },
+    {
+      "date": "2026-09-21",
+      "action": "tested",
+      "details": "Updated scores: 18 mirrors updated, 2 failed"
+    },
+    {
+      "date": "2026-09-21",
+      "action": "capability_added",
+      "details": "v1.5.0: added read-only HTTP API (server/), service->mirror recipes (references/recipes.json, 25 services), crowd-report aggregation with median scoring (--aggregate / --network-label), and dependency-free selftest (scripts/selftest.py, wired into CI). Mirror data unchanged (121 sources)."
+    },
+    {
+      "date": "2026-09-21",
+      "action": "capability_added",
+      "details": "v1.6.0: distribution + automation layer. Crowd contributions no longer need a fork or PR -- the '网络实测上报' GitHub Issue form is ingested automatically by scripts/ingest_report.py + .github/workflows/report-ingest.yml (whitelisted: rows reduced to {name,status,time_ms}, name must already exist in this database, so a report can move a known mirror's score but can never introduce a new URL). Added AGENTS.md / CLAUDE.md / .cursor/rules so any coding agent opening the repo is routed to the database. Added .github/workflows/pages.yml to publish docs/index.html. Selftest grew from 65 to 108 assertions (anti-poisoning, field minimisation, label sanitisation, doc-drift check). Mirror data unchanged (121 sources)."
+    },
+    {
+      "date": "2026-09-21",
+      "action": "capability_added",
+      "details": "v1.7.0: contributor onboarding + change history + doc-drift guards. Added CONTRIBUTING.md (three contribution paths ordered by effort; the zero-git issue-report path first; the five contribution classes that are rejected), CHANGELOG.md (1.2.0 -> 1.7.0, extracted out of README so one history is not maintained in two places), and SECURITY.md (threat model: the whole risk of this project is a poisoned RECOMMENDATION, not code execution). Selftest gained section 8 (doc consistency: version / mirror-count / assertion-count across six current-state docs, plus CHANGELOG and server-README sample version) and a meta-assertion that does not count itself, so \"assertions stated in docs == assertions actually run\" is now enforced by CI. Also cleared 12 stale claims across 7 files. Mirror data unchanged (121 sources)."
+    },
+    {
+      "date": "2026-09-21",
+      "action": "fixed",
+      "details": "MCP transport drift. mcp_server/accel_mirror_mcp.py had reimplemented a weaker subset of the resolution logic: best_mirror only matched a bare category name, so best_mirror(service=\"pip\") silently ignored the argument and answered \"unknown category\" -- while README and SKILL.md both claimed the HTTP API and the MCP server \"share one set of rules\". They did not. The MCP server now imports server/accel_mirror_api.py and reuses response_for_best / resolve_service / build_commands, so the two transports cannot diverge; selftest section 8 compares all 25 service names across both. Also: serverInfo.version was hardcoded to 1.4.0 while the database was at 1.7.0 -- it now reads the database version, removing another rot-prone constant. list_mirrors now accepts a service name as well as a category. Mirror data unchanged (121 sources)."
     }
   ],
   "mirrors": {
@@ -1339,17 +1396,128 @@
         "test_time_ms": 15574,
         "status": "active",
         "notes": "清华Homebrew bottles镜像"
+      }
+    ],
+    "ai_models": [
+      {
+        "name": "OpenXLab 浦源 (上海AI Lab)",
+        "url": "https://openxlab.org.cn",
+        "test_url": "https://openxlab.org.cn",
+        "score": 94,
+        "last_tested": "2026-09-21",
+        "test_time_ms": 102,
+        "status": "active",
+        "notes": "上海人工智能实验室开源平台，书生系列模型与数据集的官方托管地，国内原生源。",
+        "usage": "pip install openxlab && openxlab model download --model-repo <org>/<name>"
+      },
+      {
+        "name": "ModelScope 魔搭",
+        "url": "https://modelscope.cn",
+        "test_url": "https://modelscope.cn",
+        "score": 91,
+        "last_tested": "2026-09-21",
+        "test_time_ms": 167,
+        "status": "active",
+        "notes": "阿里达摩院模型社区。热门模型官方同步，国内原生源，不经过任何代理中间层，大权重优先选它。",
+        "usage": "pip install modelscope && modelscope download --model <org>/<name>"
+      },
+      {
+        "name": "WiseModel 始智AI",
+        "url": "https://www.wisemodel.cn",
+        "test_url": "https://www.wisemodel.cn",
+        "score": 91,
+        "last_tested": "2026-09-21",
+        "test_time_ms": 187,
+        "status": "active",
+        "notes": "国内开源模型社区，托管大量国产开源权重，可作为 ModelScope 的补充。"
+      },
+      {
+        "name": "OpenI 启智",
+        "url": "https://openi.pcl.ac.cn",
+        "test_url": "https://openi.pcl.ac.cn",
+        "score": 89,
+        "last_tested": "2026-09-21",
+        "test_time_ms": 255,
+        "status": "active",
+        "notes": "鹏城实验室启智平台（原名 OpenI），托管国产大模型权重，支持 git 拉取。"
+      },
+      {
+        "name": "BAAI 智源 (FlagOpen)",
+        "url": "https://hub.baai.ac.cn",
+        "test_url": "https://hub.baai.ac.cn",
+        "score": 87,
+        "last_tested": "2026-09-21",
+        "test_time_ms": 325,
+        "status": "active",
+        "notes": "北京智源研究院模型仓库，Aquila / Emu / BGE 等系列权重官方发布地。"
+      },
+      {
+        "name": "hf-mirror (HuggingFace 国内镜像)",
+        "url": "https://hf-mirror.com",
+        "test_url": "https://hf-mirror.com",
+        "score": 80,
+        "last_tested": "2026-09-21",
+        "test_time_ms": 876,
+        "status": "active",
+        "notes": "HuggingFace 的国内反代，模型与数据集均可下载。环境变量必须在 import transformers 之前设置。",
+        "usage": "export HF_ENDPOINT=https://hf-mirror.com"
+      }
+    ],
+    "python": [
+      {
+        "name": "PyTorch wheels (上海交大)",
+        "url": "https://mirror.sjtu.edu.cn/pytorch-wheels/",
+        "test_url": "https://mirror.sjtu.edu.cn/pytorch-wheels/",
+        "score": 89,
+        "last_tested": "2026-09-21",
+        "test_time_ms": 245,
+        "status": "active",
+        "notes": "上海交大 PyTorch 轮子镜像，作为阿里源的备用。",
+        "usage": "pip install torch --index-url https://mirror.sjtu.edu.cn/pytorch-wheels/cu121"
+      },
+      {
+        "name": "conda (清华)",
+        "url": "https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/main/",
+        "test_url": "https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/main/",
+        "score": 79,
+        "last_tested": "2026-09-21",
+        "test_time_ms": 1026,
+        "status": "active",
+        "notes": "清华 Anaconda 镜像。写入 ~/.condarc 的 default_channels 与 custom_channels（conda-forge 等）。",
+        "usage": "conda config --set show_channel_urls yes  # 并写入 ~/.condarc，见 references/package-managers-guide.md"
+      },
+      {
+        "name": "PyTorch wheels (阿里)",
+        "url": "https://mirrors.aliyun.com/pytorch-wheels/",
+        "test_url": "https://mirrors.aliyun.com/pytorch-wheels/",
+        "score": 72,
+        "last_tested": "2026-09-21",
+        "test_time_ms": 2466,
+        "status": "active",
+        "notes": "阿里云 PyTorch 轮子镜像。CUDA 版 torch 体积达 GB 级，走此源可避开 download.pytorch.org。",
+        "usage": "pip install torch --index-url https://mirrors.aliyun.com/pytorch-wheels/cu121"
       },
       {
         "name": "pip 清华镜像",
         "url": "https://pypi.tuna.tsinghua.edu.cn/simple",
         "test_url": "https://pypi.tuna.tsinghua.edu.cn/simple/",
-        "score": 53,
-        "last_tested": "2026-09-12",
+        "score": 57,
+        "last_tested": "2026-09-21",
         "status": "active",
         "notes": "清华PyPI镜像，稳定快速",
         "usage": "pip install -i https://pypi.tuna.tsinghua.edu.cn/simple <package>",
-        "test_time_ms": 22237
+        "test_time_ms": 13803
+      },
+      {
+        "name": "pip (腾讯云)",
+        "url": "https://mirrors.cloud.tencent.com/pypi/simple/",
+        "test_url": "https://mirrors.cloud.tencent.com/pypi/simple/",
+        "score": 55,
+        "last_tested": "2026-09-21",
+        "test_time_ms": 17493,
+        "status": "active",
+        "notes": "腾讯云 PyPI 镜像",
+        "usage": "pip install -i https://mirrors.cloud.tencent.com/pypi/simple <package>"
       },
       {
         "name": "pypi (阿里)",
@@ -1359,8 +1527,101 @@
         "last_tested": "2026-09-12",
         "test_time_ms": 23385,
         "status": "active",
-        "notes": "阿里云PyPI镜像"
+        "notes": "阿里云PyPI镜像",
+        "consecutive_failures": 1
+      },
+      {
+        "name": "pip (中科大)",
+        "url": "https://mirrors.ustc.edu.cn/pypi/simple/",
+        "test_url": "https://mirrors.ustc.edu.cn/pypi/simple/",
+        "score": 50,
+        "last_tested": null,
+        "test_time_ms": null,
+        "status": "active",
+        "notes": "中科大 PyPI 镜像",
+        "usage": "pip install -i https://mirrors.ustc.edu.cn/pypi/simple <package>",
+        "consecutive_failures": 1
+      }
+    ],
+    "dev_registry": [
+      {
+        "name": "ghcr (南京大学)",
+        "url": "https://ghcr.nju.edu.cn",
+        "test_url": "https://ghcr.nju.edu.cn/v2/",
+        "score": 94,
+        "last_tested": "2026-09-21",
+        "test_time_ms": 101,
+        "status": "active",
+        "notes": "南京大学开源镜像站的 ghcr.io 镜像",
+        "usage": "docker pull ghcr.nju.edu.cn/<owner>/<image>:<tag>"
+      },
+      {
+        "name": "k8s (阿里云 google_containers)",
+        "url": "https://registry.aliyuncs.com/google_containers",
+        "test_url": "https://registry.aliyuncs.com/v2/",
+        "score": 93,
+        "last_tested": "2026-09-21",
+        "test_time_ms": 130,
+        "status": "active",
+        "notes": "阿里云同步的 Kubernetes 官方镜像，路径为 google_containers/<image>",
+        "usage": "docker pull registry.aliyuncs.com/google_containers/<image>:<tag>"
+      },
+      {
+        "name": "quay (DaoCloud)",
+        "url": "https://quay.m.daocloud.io",
+        "test_url": "https://quay.m.daocloud.io/v2/",
+        "score": 92,
+        "last_tested": "2026-09-21",
+        "test_time_ms": 146,
+        "status": "active",
+        "notes": "Red Hat Quay 镜像，供 quay.io 使用",
+        "usage": "docker pull quay.m.daocloud.io/<org>/<image>:<tag>"
+      },
+      {
+        "name": "nvcr (DaoCloud)",
+        "url": "https://nvcr.m.daocloud.io",
+        "test_url": "https://nvcr.m.daocloud.io/v2/",
+        "score": 92,
+        "last_tested": "2026-09-21",
+        "test_time_ms": 150,
+        "status": "active",
+        "notes": "NVIDIA NGC 镜像（PyTorch/TensorRT 等 AI 训练容器），供 nvcr.io 使用",
+        "usage": "docker pull nvcr.m.daocloud.io/<org>/<image>:<tag>"
+      },
+      {
+        "name": "ghcr (DaoCloud)",
+        "url": "https://ghcr.m.daocloud.io",
+        "test_url": "https://ghcr.m.daocloud.io/v2/",
+        "score": 92,
+        "last_tested": "2026-09-21",
+        "test_time_ms": 154,
+        "status": "active",
+        "notes": "GitHub Container Registry 镜像。把镜像名前缀 ghcr.io 换成 ghcr.m.daocloud.io，拉完再 tag 回原名。",
+        "usage": "docker pull ghcr.m.daocloud.io/<owner>/<image>:<tag>"
+      },
+      {
+        "name": "gcr (DaoCloud)",
+        "url": "https://gcr.m.daocloud.io",
+        "test_url": "https://gcr.m.daocloud.io/v2/",
+        "score": 92,
+        "last_tested": "2026-09-21",
+        "test_time_ms": 154,
+        "status": "active",
+        "notes": "Google Container Registry 镜像，供 gcr.io 使用",
+        "usage": "docker pull gcr.m.daocloud.io/<project>/<image>:<tag>"
+      },
+      {
+        "name": "k8s (DaoCloud)",
+        "url": "https://k8s.m.daocloud.io",
+        "test_url": "https://k8s.m.daocloud.io/v2/",
+        "score": 91,
+        "last_tested": "2026-09-21",
+        "test_time_ms": 168,
+        "status": "active",
+        "notes": "registry.k8s.io 官方镜像镜像，Kubernetes 集群国内拉取首选",
+        "usage": "docker pull k8s.m.daocloud.io/<image>:<tag>"
       }
     ]
-  }
+  },
+  "mirror_count": 121
 }

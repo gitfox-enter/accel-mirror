@@ -14,14 +14,21 @@
 # 的盲区。深度结果由 update_mirrors.py 写入 mirrors.json 的 throughput_bps 字段，
 # 用于同分镜像间的二次排序参考。
 #
+# 众包上报（--network-label）：输出 JSON 自带 meta 块，记录工具版本与用户自填的
+# 网络标签（如 "北京联通"）。**不采集 IP / 路径 / 用户名 / 设备信息**，可直接把
+# 结果文件贴到 GitHub Issue 参与众包；多份上报用
+# `update_mirrors.py --aggregate reports/*.json` 取中位数合并。
+#
 # 用法:
 #   bash test_mirrors.sh [--type docker|github|tools|all] [--output FILE]
 #                        [--timeout 10] [--parallel 8] [--deep]
+#                        [--network-label "北京联通"]
 #
 # 示例:
 #   bash test_mirrors.sh --type all --output /tmp/all.json --timeout 8 --parallel 16
 #   bash test_mirrors.sh --type github --deep --output /tmp/gh.json
 #   bash test_mirrors.sh --type tools
+#   bash test_mirrors.sh --type all --output report.json --network-label "北京联通 500M"
 # =============================================================================
 set -euo pipefail
 
@@ -36,6 +43,8 @@ PARALLEL=8
 TEST_TYPE="all"
 OUTPUT_FILE=""
 DEEP=0
+NETWORK_LABEL="${ACCEL_NETWORK_LABEL:-}"
+TOOL_VERSION="1.5.0"
 
 # --deep 模式使用的固定大文件（稳定 tag 的 release 资产，只拉 1MB Range）
 DEEP_TARGET="${ACCEL_DEEP_TARGET:-https://github.com/BurntSushi/ripgrep/releases/download/14.1.0/ripgrep-14.1.0-x86_64-pc-windows-msvc.zip}"
@@ -55,15 +64,18 @@ while [[ $# -gt 0 ]]; do
         --timeout)    TIMEOUT="$2"; shift 2 ;;
         --parallel)   PARALLEL="$2"; shift 2 ;;
         --deep)       DEEP=1 ;;
+        --network-label) NETWORK_LABEL="$2"; shift 2 ;;
         --help|-h)
             cat <<EOF
-用法: $0 [--type docker|github|tools|all] [--output FILE] [--timeout SECONDS] [--parallel N] [--deep]
+用法: $0 [--type docker|github|tools|ai|python|registry|all] [--output FILE] [--timeout SECONDS] [--parallel N] [--deep] [--network-label LABEL]
 
-  --type      分类: docker(社区+企业) | github | tools | all(默认)
-  --output    结果 JSON 输出文件（默认 stdout）
-  --timeout   curl 连接超时秒数（默认 10）
-  --parallel  并发任务数（默认 8）
-  --deep      深度模式: 额外对 github prefix 代理做 1MB 真实吞吐实测（较慢）
+  --type          分类: docker(社区+企业) | github | tools | ai(模型源) | python(包管理) | registry(容器仓库) | all(默认)
+  --output        结果 JSON 输出文件（默认 stdout）
+  --timeout       curl 连接超时秒数（默认 10）
+  --parallel      并发任务数（默认 8）
+  --deep          深度模式: 额外对 github prefix 代理做 1MB 真实吞吐实测（较慢）
+  --network-label 自填网络标签（如 "北京联通 500M"），用于众包上报聚合；默认空
+                  隐私说明: 输出文件不含 IP / 路径 / 用户名 / 设备信息
 EOF
             exit 0 ;;
         *) echo "Unknown option: $1" >&2; exit 1 ;;
@@ -294,16 +306,23 @@ echo -e "${CYAN}  accel-mirror 并发测速引擎${NC}"
 echo -e "${CYAN}══════════════════════════════════════════════${NC}"
 echo "  并发: ${PARALLEL}  |  超时: ${TIMEOUT}s  |  类型: ${TEST_TYPE}  |  深度: $([[ $DEEP -eq 1 ]] && echo on || echo off)"
 echo "  数据库: ${MIRRORS_FILE}"
+# 注意: 不能用 `[[ ... ]] && echo`——set -e 下条件为假会返回 1 并终止脚本
+if [[ -n "$NETWORK_LABEL" ]]; then
+    echo "  网络标签: ${NETWORK_LABEL}（将写入结果 meta，用于众包聚合）"
+fi
 echo ""
 
 # 解析要测的分类
 CATEGORIES=()
 case "$TEST_TYPE" in
-    all)     CATEGORIES=(docker_community docker_enterprise github tools) ;;
-    docker)  CATEGORIES=(docker_community docker_enterprise) ;;
-    github)  CATEGORIES=(github) ;;
-    tools)   CATEGORIES=(tools) ;;
-    *) echo "Error: 未知分类 '$TEST_TYPE'（可用: docker|github|tools|all）" >&2; exit 1 ;;
+    all)      CATEGORIES=(docker_community docker_enterprise github tools ai_models python dev_registry) ;;
+    docker)   CATEGORIES=(docker_community docker_enterprise) ;;
+    github)   CATEGORIES=(github) ;;
+    tools)    CATEGORIES=(tools) ;;
+    ai)       CATEGORIES=(ai_models) ;;
+    python)   CATEGORIES=(python) ;;
+    registry) CATEGORIES=(dev_registry) ;;
+    *) echo "Error: 未知分类 '$TEST_TYPE'（可用: docker|github|tools|ai|python|registry|all）" >&2; exit 1 ;;
 esac
 
 # 临时目录（mktemp 保证唯一且可写）
@@ -334,9 +353,14 @@ if [[ "$DEEP" -eq 1 ]]; then
 fi
 
 # Python 统一组装最终 JSON（直接读 .out 管道文件，完全规避字符串插值/转义问题）
-FINAL_JSON="$(python3 - "$TMPDIR_PY" <<'PY'
+# 网络标签经 argv 传入，避免内插注入
+FINAL_JSON="$(python3 - "$TMPDIR_PY" "$NETWORK_LABEL" "$TOOL_VERSION" <<'PY'
 import json, os, sys
 from datetime import datetime
+
+tmpdir = sys.argv[1]
+network_label = sys.argv[2] if len(sys.argv) > 2 else ''
+tool_version = sys.argv[3] if len(sys.argv) > 3 else ''
 
 tmpdir = sys.argv[1]
 result = {}
@@ -363,7 +387,15 @@ for f in sorted(os.listdir(tmpdir)):
             entries.append(entry)
     result[cat] = entries
 
-print(json.dumps({'test_time': datetime.now().isoformat(), 'results': result}, ensure_ascii=False))
+meta = {
+    'schema': 1,
+    'tool': 'accel-mirror/test_mirrors.sh',
+    'tool_version': tool_version,
+    'generated_at': datetime.now().isoformat(timespec='seconds'),
+    'network_label': network_label,
+    'privacy': 'contains no IP, no file path, no user id, no device info',
+}
+print(json.dumps({'meta': meta, 'test_time': meta['generated_at'], 'results': result}, ensure_ascii=False))
 PY
 )"
 
