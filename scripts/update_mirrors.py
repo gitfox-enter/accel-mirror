@@ -26,6 +26,7 @@ Usage:
 
 import json
 import argparse
+import math
 import sys
 import os
 from datetime import datetime
@@ -50,10 +51,17 @@ def load_mirrors():
 
 def save_mirrors(data):
     """Save mirrors.json with sorted entries and updated metadata."""
-    # Sort each category by score (descending)
+    # Sort each category: score descending, then latency ascending as tie-breaker
+    # (log-scale scoring means many fast mirrors share the same score; latency
+    #  ordering keeps the top of the list genuinely fastest)
     for cat in SORTED_CATEGORIES:
         if cat in data.get("mirrors", {}):
-            data["mirrors"][cat].sort(key=lambda x: x.get("score", 0), reverse=True)
+            data["mirrors"][cat].sort(
+                key=lambda x: (
+                    -x.get("score", 0),
+                    x["test_time_ms"] if isinstance(x.get("test_time_ms"), int) and x.get("test_time_ms", 0) > 0 else 10**9,
+                )
+            )
 
     data["last_updated"] = datetime.now().strftime("%Y-%m-%d")
 
@@ -80,12 +88,20 @@ def log_evolution(data, action, details):
 
 def calculate_score(time_ms):
     """Calculate score from response time in milliseconds.
-    Formula: score = max(0, round(100 - (time_ms / 1000) * 2))
+
+    Log-scale formula (v1.3.0):
+        score = max(0, round(100 - 20 * log10(1 + time_s / 0.1)))
+
+    Rationale: the old linear formula (100 - s*2) saturated the top of the
+    scale — anything under ~500ms scored 99, hiding real differences between
+    fast mirrors. The log scale spreads the useful range:
+        100ms -> 94 | 300ms -> 89 | 500ms -> 84 | 1s -> 79
+        3s -> 70    | 10s -> 60    | 30s -> 50
     """
-    if time_ms is None or time_ms == 0:
+    if time_ms is None or time_ms <= 0:
         return 0
     time_s = time_ms / 1000.0
-    score = max(0, round(100 - time_s * 2))
+    score = max(0, round(100 - 20 * math.log10(1 + time_s / 0.1)))
     return score
 
 
@@ -120,6 +136,10 @@ def update_scores(data, test_results):
                 mirror["score"] = new_score
                 mirror["last_tested"] = datetime.now().strftime("%Y-%m-%d")
                 mirror["test_time_ms"] = time_ms
+                # Throughput (bytes/s) from --deep mode, if present
+                speed = result.get("speed_bps")
+                if isinstance(speed, (int, float)) and speed > 0:
+                    mirror["throughput_bps"] = int(speed)
                 if mirror.get("status") == "deprecated":
                     # Revive
                     mirror["status"] = "active"
@@ -222,6 +242,61 @@ def sort_only(data):
     print("📊 Sorted all mirrors by score (descending)")
 
 
+def record_alive(data, test_results):
+    """Record a CI survival snapshot WITHOUT touching scores.
+
+    CI runs on GitHub datacenter networks, which differ from real user
+    networks — so CI results must never feed the score. But they are still
+    a useful 'last confirmed alive' signal: each mirror that responded ok
+    gets `last_ci_alive` stamped. Scores stay untouched.
+    """
+    results = test_results.get("results", {})
+    alive = 0
+    total = 0
+    for category_name, category_results in results.items():
+        if category_name not in data.get("mirrors", {}):
+            continue
+        result_map = {r["name"]: r for r in category_results}
+        for mirror in data["mirrors"][category_name]:
+            name = mirror.get("name", "")
+            if name not in result_map:
+                continue
+            total += 1
+            if result_map[name].get("status") == "ok":
+                mirror["last_ci_alive"] = datetime.now().strftime("%Y-%m-%d")
+                alive += 1
+
+    data["last_ci_test"] = datetime.now().strftime("%Y-%m-%d")
+    data["last_ci_alive_count"] = alive
+    log_evolution(data, "ci_alive_check",
+                  f"CI survival snapshot: {alive}/{total} mirrors responded ok "
+                  f"(scores untouched, CI data never writes back scores)")
+    print(f"🛰️ CI survival snapshot: {alive}/{total} alive (scores untouched)")
+    return alive, total
+
+
+def rescore(data):
+    """Recompute all scores from stored test_time_ms using the current formula.
+
+    Use this after changing the scoring formula so the database stays
+    consistent without waiting for a full re-test.
+    """
+    updated = 0
+    for cat in SORTED_CATEGORIES:
+        for mirror in data.get("mirrors", {}).get(cat, []):
+            t = mirror.get("test_time_ms")
+            if isinstance(t, int) and t > 0 and mirror.get("status") == "active":
+                new_score = calculate_score(t)
+                if new_score != mirror.get("score"):
+                    mirror["score"] = new_score
+                    updated += 1
+    log_evolution(data, "rescored",
+                  f"Recomputed scores from stored latency with current formula "
+                  f"({updated} mirrors changed)")
+    print(f"🧮 Rescored: {updated} mirrors updated from stored test_time_ms")
+    return updated
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Update mirror scores and manage the mirror database.",
@@ -241,6 +316,10 @@ Examples:
     parser.add_argument("--deprecate", action="store_true", help="Deprecate a mirror")
     parser.add_argument("--revive", action="store_true", help="Revive a deprecated mirror")
     parser.add_argument("--sort-only", action="store_true", help="Just sort by score and save")
+    parser.add_argument("--record-alive", action="store_true",
+                        help="With --input: record CI survival snapshot (last_ci_alive) only; scores untouched")
+    parser.add_argument("--rescore", action="store_true",
+                        help="Recompute all scores from stored test_time_ms with the current formula")
     parser.add_argument("--name", help="Mirror name (for --add/--deprecate/--revive)")
     parser.add_argument("--url", help="Mirror URL (for --add)")
     parser.add_argument("--category", help="Mirror category (for --add)")
@@ -259,14 +338,20 @@ Examples:
 
     # Handle different modes
     if args.input:
-        # Update from test results
         if not os.path.exists(args.input):
             print(f"❌ Test results file not found: {args.input}")
             sys.exit(1)
         with open(args.input, "r", encoding="utf-8") as f:
             test_results = json.load(f)
-        print("📝 Updating mirror scores from test results...\n")
-        update_scores(data, test_results)
+        if args.record_alive:
+            print("🛰️ Recording CI survival snapshot (scores untouched)...\n")
+            record_alive(data, test_results)
+        else:
+            print("📝 Updating mirror scores from test results...\n")
+            update_scores(data, test_results)
+
+    elif args.rescore:
+        rescore(data)
 
     elif args.add:
         if not args.name or not args.url or not args.category:
@@ -309,7 +394,9 @@ Examples:
         for m in mirrors[:5]:
             if m.get("status") == "deprecated":
                 continue
-            print(f"    {m['score']:3d} │ {m['name']}")
+            latency = m.get("test_time_ms")
+            latency_str = f" ({latency}ms)" if isinstance(latency, int) and latency > 0 else ""
+            print(f"    {m['score']:3d} │ {m['name']}{latency_str}")
     print()
 
 
