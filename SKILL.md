@@ -1,30 +1,93 @@
 ---
 name: accel-mirror
 description: >-
-  解决中国大陆网络环境下的"下载慢 / 超时 / 连不上"问题。只要用户抱怨下载或安装慢、
-  连不上、超时、断流，或需要配置任何国内镜像源，就用本技能——它内含一份持续实测打分的
-  镜像源数据库，可以直接给出当前最优源和可执行命令，不用猜也不用搜。
-
-  典型场景：Docker 拉镜像卡住、docker pull timeout、registry-1.docker.io 连接失败、
-  需要配 daemon.json 的 registry-mirrors；git clone 慢、GitHub 打不开、release 资产下载失败、
-  需要配 ghproxy 类加速；HuggingFace 模型下载断流、transformers 拉权重超时、
-  需要 hf-mirror 或 ModelScope 替代；pip install 卡在下载、conda 装不上、PyTorch 下载太慢、
-  需要换 pip / conda 源；ghcr.io、quay.io、registry.k8s.io、nvcr.io 拉不下来；
-  npm install 卡住、go mod 拉不动、apt update 超时、Homebrew 慢、Maven/Gradle 依赖慢；
-  下载哈希不一致、需要安装 aria2/axel 下载器。
-
-  取数途径（任选，越靠前越省 token）：若已部署本仓库的只读接口，直接
-  `GET /v1/best?service=<服务名>`（服务名 25 个：pip / pytorch / conda / huggingface /
-  modelscope / docker / github / ghcr / k8s / npm / go / maven / apt / homebrew …）
-  即可拿到最优源与可执行命令；否则读 references/mirrors.json 选 status=active 且 score 最高者。
-
-  关键词：镜像加速、镜像源、docker 源、github 镜像、ghproxy、registry-mirrors、
-  npm镜像、pip镜像、conda源、hf-mirror、modelscope、华为云 swr、ddn-k8s、
-  下载慢、下载失败、下载器安装、aria2、axel、加速、镜像。
-  即使用户只说了"docker 慢"、"github 打不开"、"装不上"、"下不动"，也立即使用本技能。
+  【AI自维护Skill】国内网络加速镜像源数据库,解决"下载慢/超时/连不上"问题。
+  
+  ⚠️ 核心原则:不要直接使用已有分数!每次使用前必须先测速,因为分数会腐烂,不同网络环境结果不同。
+  
+  本Skill具备自我进化能力:
+  - 每次下载任务后自动测速并更新分数
+  - 主动搜索网络上的新加速镜像源
+  - 定期维护和完善数据库
+  - 记录所有变更到evolution_log
+  
+  典型场景:Docker拉镜像卡住、git clone慢、GitHub打不开、HuggingFace模型下载断流、
+  pip/conda装不上、npm/go/apt超时等。
+  
+  关键词:镜像加速、镜像源、docker源、github镜像、ghproxy、registry-mirrors、
+  npm镜像、pip镜像、conda源、hf-mirror、modelscope、下载慢、下载失败、加速、镜像。
+  即使用户只说了"docker慢"、"github打不开"、"装不上"、"下不动",也立即使用本技能。
 ---
 
 # Accelerated Mirror Manager (accel-mirror)
+
+**这是一个AI自维护的Skill**,管理国内网络加速镜像源数据库。
+
+## ⚠️ 核心原则:先测速,后使用
+
+**绝对不要直接使用mirrors.json中的已有分数!**
+
+原因:
+- 分数会腐烂,镜像源的可用性随时间剧烈波动
+- 不同网络环境(运营商、地区)下结果差异很大
+- 训练数据中的分数可能已经过时
+
+**正确流程:**
+1. 检查`last_full_test`字段,如果超过7天或为null → 必须先实测
+2. 即使是首次使用,也建议实测一次(你的网络环境可能不同)
+3. 运行`bash scripts/test_mirrors.sh --type <分类> --output /tmp/result.json`
+4. 运行`python3 scripts/update_mirrors.py --input /tmp/result.json`回写分数
+5. 现在才可以使用实测后的最优源
+
+## 🔄 自我进化协议(Self-Evolution Protocol)
+
+本Skill设计为AI主动维护,你有权力和责任:
+
+### 每次使用后的标准动作
+1. **测速并更新**:如果用户反馈某个源快/慢/挂了,立即更新分数并记录到`evolution_log`
+2. **发现新源**:如果通过网络搜索或用户输入发现新镜像,立即添加到mirrors.json(score:50未测)
+3. **失效处理**:如果某个源连续3次实测失败,设置`status: "deprecated"`和`score: 0`
+4. **复活机制**:如果deprecated的源通过测试,恢复`status: "active"`并赋予真实分数
+
+### 主动搜索新镜像源
+当以下情况发生时,主动搜索网络寻找新镜像:
+- 某个分类的活跃源少于5个
+- 用户提到新的服务/工具需要加速
+- 现有源分数普遍低于70
+- `last_full_test`超过7天
+
+**搜索关键词示例:**
+- Docker: "docker 镜像加速 2026", "dockerhub 镜像站 最新", "docker registry mirror china"
+- GitHub: "github 加速镜像 2026", "ghproxy 替代", "github proxy list"
+- PyPI: "pip 镜像源 最新", "pypi mirror china 2026"
+- 通用: "国内加速镜像源汇总", "中国网络加速镜像 2026"
+
+找到新镜像后,立即用`test_mirrors.sh`测试,然后添加到数据库。
+
+### 定期维护任务
+- 每周检查一次`last_full_test`,如果过期则主动运行全量测速
+- 每月搜索一次新镜像源,补充到数据库
+- 发现新的下载问题或解决方案时,更新对应的guide文档
+
+### 可以修改的文件
+你有完全权限修改:
+- `references/mirrors.json` - 增删源、改分数、改状态
+- `references/recipes.json` - 添加新服务名/别名/命令模板
+- `references/*-guide.md` - 更新配置和排错建议
+- `scripts/test_mirrors.sh` - 改进测试逻辑
+- `scripts/update_mirrors.py` - 改进评分算法
+- `llms.txt` - 保持AI入口索引同步
+- `docs/index.html` - 由脚本生成,改库后重新生成
+
+**不要修改**:`SKILL.md`的结构(除非用户要求)
+
+### 进化日志格式
+每次变更必须记录:
+```json
+{"date": "2026-09-27", "action": "added|updated_score|deprecated|revived|tested|strategy_change", "details": "具体描述"}
+```
+
+---
 
 A self-evolving skill that manages a curated, dynamically sorted database of network acceleration mirrors for Docker Hub, GitHub, and related ecosystems (npm/pip/Go). Designed to grow smarter with every use.
 
@@ -74,13 +137,34 @@ accel-mirror/
 
 ## How to Use This Skill
 
-### Phase 1 — Read the database
+### Phase 1 — 先测速，再使用（关键！）
 
-Always start by reading `references/mirrors.json`. This file contains:
-- All known mirrors with scores (0–100, higher = better)
-- Status flags (`active` / `deprecated`)
-- Last test timestamps
-- Usage examples and notes
+**不要直接使用已有分数！** 分数会腐烂，不同网络环境下结果也不同。
+
+**第一步：检查数据新鲜度**
+读取 `references/mirrors.json`，查看 `last_full_test` 字段：
+- 如果 `last_full_test` 超过 7 天或为 null → **必须先实测**
+- 即使数据看起来新鲜，也建议首次使用时实测一次（你的网络环境可能不同）
+
+**第二步：实测当前网络环境**
+```bash
+# 测试目标分类（推荐，几分钟）
+bash scripts/test_mirrors.sh --type <分类> --output /tmp/mirror_test_results.json
+
+# 或全量测试（较慢，10-15分钟）
+bash scripts/test_mirrors.sh --type all --output /tmp/mirror_test_results.json
+
+# 深度模式：额外测真实吞吐（更慢，但更准确）
+bash scripts/test_mirrors.sh --type <分类> --deep --output /tmp/mirror_test_results.json
+```
+
+**第三步：回写分数**
+```bash
+python3 scripts/update_mirrors.py --input /tmp/mirror_test_results.json
+```
+
+**第四步：使用实测后的最优源**
+现在 `mirrors.json` 中的分数已经反映**你当前网络环境**的真实情况，可以放心使用。
 
 Categories: `docker_community`, `docker_enterprise`, `github`, `tools`, `ai_models`, `python`, `dev_registry`.
 
@@ -448,11 +532,21 @@ This skill is designed to evolve indefinitely. The AI agent using this skill has
 ### Evolution triggers (do these whenever applicable):
 
 1. **After each use**: If the user reported a mirror as fast/slow/broken, update its score and log the change in `evolution_log`
-2. **Periodic testing**: If `last_full_test` in mirrors.json is >7 days old or null, suggest running the test scripts
+2. **Periodic testing**: If `last_full_test` in mirrors.json is >7 days old or null, **proactively run the test scripts** without waiting for user request
 3. **New discovery**: When the AI discovers a new mirror via search or user input, add it to mirrors.json with `score: 50` (neutral default for untested) and log it
 4. **Failure pattern**: If a mirror fails 3+ consecutive tests, set `status: "deprecated"` and `score: 0`
 5. **Revival**: If a deprecated mirror passes testing, restore `status: "active"` and assign a real score
 6. **Strategy shift**: If the mirror landscape changes significantly (e.g., a major policy change), update the strategy guidelines in SKILL.md and the reference files
+7. **Proactive discovery**: Periodically search the web for new mirrors, especially when:
+   - A category has fewer than 5 active mirrors
+   - The user mentions a new service/tool that needs acceleration
+   - Existing mirrors in a category are all scoring below 70
+   - Search queries to use:
+     - Docker: "docker 镜像加速 2026", "dockerhub 镜像站 最新", "docker registry mirror china"
+     - GitHub: "github 加速镜像 2026", "ghproxy 替代", "github proxy list"
+     - PyPI: "pip 镜像源 最新", "pypi mirror china 2026"
+     - General: "国内加速镜像源汇总", "中国网络加速镜像 2026"
+   - After finding new mirrors, test them immediately with `test_mirrors.sh` before adding to the database
 
 ### Evolution log format
 

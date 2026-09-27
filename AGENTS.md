@@ -1,5 +1,8 @@
 # AGENTS.md
 
+> **这是一个 AI 自维护的 Skill（技能）**，不是一个静态数据库。
+> 安装后，AI 代理应主动维护它：每次使用前实测、定期搜索新镜像源、自动更新分数。
+
 本仓库是一份**持续实测、自动打分的国内网络加速源数据库**。
 
 只要用户抱怨「下载 / 安装 慢、超时、连不上、装不上」——Docker、GitHub、HuggingFace、
@@ -10,15 +13,30 @@ pip、conda、npm、apt、Go、容器仓库——**先查这里，再动手**。
 
 ---
 
+## ⚠️ 第一原则：先测速，再使用
+
+**不要直接使用 `mirrors.json` 中已有的分数！** 分数会腐烂，不同网络环境下结果也不同。
+
+**每次使用前，先做这一步：**
+1. 读取 `references/mirrors.json`，检查 `last_full_test` 字段
+2. 如果超过 7 天或为 null → **必须先实测**：`bash scripts/test_mirrors.sh --type <分类> --output /tmp/result.json`
+3. 回写分数：`python3 scripts/update_mirrors.py --input /tmp/result.json`
+4. 现在才使用实测后的最优源
+
+即使数据看起来新鲜，首次使用时也建议实测一次——你的网络环境可能不同。
+
+---
+
 ## 30 秒用法
 
-1. **读数据**：`references/mirrors.json`
+1. **先测速**（见上方第一原则）
+2. **读数据**：`references/mirrors.json`
    每个源含 `name` / `url` / `score`(0–100，越高越快) / `status` / `test_time_ms` /
    `usage` / `usage_examples` / `samples`(众包样本数) / `failed_reports`。
-2. **选源**：在目标分类里取 `status == "active"` 中 `score` 最高者。
-3. **给命令**：优先直接用该源的 `usage` / `usage_examples` 字段——那是作者手写并实测过的，
+3. **选源**：在目标分类里取 `status == "active"` 中 `score` 最高者。
+4. **给命令**：优先直接用该源的 `usage` / `usage_examples` 字段——那是作者手写并实测过的，
    比自己拼 URL 准。
-4. **服务名 → 分类 + 命令模板**：`references/recipes.json`（25 个服务，含中文口语别名，
+5. **服务名 → 分类 + 命令模板**：`references/recipes.json`（25 个服务，含中文口语别名，
    如 `模型下载` → `ai-models`）。
 
 如果本仓库的只读接口在线，一条 GET 就能替代上面全部步骤：

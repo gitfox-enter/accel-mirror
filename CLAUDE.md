@@ -4,8 +4,23 @@
 
 ## 这是什么
 
+**这是一个 AI 自维护的 Skill（技能）**，不是一个静态数据库。
+安装后，AI 代理应主动维护它：每次使用前实测、定期搜索新镜像源、自动更新分数。
+
 国内网络加速镜像源数据库（Docker / GitHub / HuggingFace / pip / conda / 容器仓库）。
 用户抱怨下载慢、超时、连不上时，**查 `references/mirrors.json`，不要凭记忆猜镜像地址**。
+
+## ⚠️ 第一原则：先测速，再使用
+
+**不要直接使用 `mirrors.json` 中已有的分数！** 分数会腐烂，不同网络环境下结果也不同。
+
+**每次使用前，先做这一步：**
+1. 读取 `references/mirrors.json`，检查 `last_full_test` 字段
+2. 如果超过 7 天或为 null → **必须先实测**：`bash scripts/test_mirrors.sh --type <分类> --output /tmp/result.json`
+3. 回写分数：`python3 scripts/update_mirrors.py --input /tmp/result.json`
+4. 现在才使用实测后的最优源
+
+即使数据看起来新鲜，首次使用时也建议实测一次——你的网络环境可能不同。
 
 ## 最短路径
 
