@@ -100,6 +100,64 @@ curl -s "https://<部署了 server/ 的域名>/v1/best?service=huggingface&forma
 
 ---
 
+## 国内获取方式（解决"首跳"问题）
+
+> 本项目本体托管在 GitHub，而它恰好在帮人/帮 AI 加速访问 GitHub——国内用户先拿到
+> 这个仓库，才能用里面的工具去加速别的下载。下面是绕开"首跳"的三种方式，按推荐度排序。
+
+### 方式 A：jsDelivr CDN 一键下载完整仓库（零注册，推荐）
+
+jsDelivr 是国内可直接访问的公共 CDN（`cdn.jsdelivr.net` 不依赖 GitHub 本体可达性）。
+仓库 `dist/` 目录内置了与 GitHub Release 完全一致的正式压缩包（含 `references/mirrors.json`
+与全部脚本，`accel-fetch.sh` 依赖同包内的镜像库，必须整体解包），jsDelivr 直接分发该文件：
+
+```bash
+# 一条命令：下载 → 校验 → 解包 → 进入目录（国内网络直连，无需任何注册）
+curl -L -o accel-mirror-1.7.0.tar.gz \
+  "https://cdn.jsdelivr.net/gh/gitfox-enter/accel-mirror@main/dist/accel-mirror-1.7.0.tar.gz"
+
+# 可选但推荐：拉取 SHA256SUMS 校验压缩包完整性（防止 CDN 缓存异常 / 传输损坏）
+curl -L -O "https://cdn.jsdelivr.net/gh/gitfox-enter/accel-mirror@main/dist/SHA256SUMS"
+sha256sum -c SHA256SUMS
+
+tar -xzf accel-mirror-1.7.0.tar.gz
+cd accel-mirror-1.7.0
+```
+
+> 说明：jsDelivr 的 `gh` 域名走 GitHub 内容分发，国内大部分地区可直连；
+> 若个别网络仍不通，可改用 `fastly.jsdelivr.net` 或 `gcore.jsdelivr.net` 前缀。
+
+### 方式 B：GitHub Release 自举（用本项目自己的逻辑拿本项目）
+
+每个版本我们都会打一个完整 tarball（含 SHA256SUMS 校验）发布到 GitHub Release。
+下载 Release 资产本身就可以用项目自带的 `accel-fetch.sh` 多源探测逻辑——
+「狗粮」：让 accel-mirror 加速 accel-mirror 的下载：
+
+```bash
+# ① 先通过 jsDelivr 拿到第一份 accel-fetch.sh（完整包方式 A 已含）
+# ② 用它下载本项目自己的 Release 资产（自动选源 + 失败回退 + SHA256 校验）
+bash scripts/accel-fetch.sh \
+  "https://github.com/gitfox-enter/accel-mirror/releases/download/v1.7.0/accel-mirror-1.7.0.tar.gz" \
+  -o accel-mirror-1.7.0.tar.gz --sha256 <SHA256SUMS 中的值>
+tar -xzf accel-mirror-1.7.0.tar.gz
+```
+
+SHA256SUMS 见各 Release 的资产列表；解包后运行 `bash scripts/accel-fetch.sh --doctor` 确认环境就绪。
+
+### 方式 C：Gitee（码云）镜像仓库
+
+> 🚧 建设中 —— 同名仓库 `gitfox-enter/accel-mirror` 已在 Gitee 开启 GitHub 自动同步，
+> 国内 `git clone` / 下载速度显著优于 GitHub 直连。仓库地址与徽章将在此更新。
+
+```bash
+# 镜像就绪后，国内用户可直接：
+git clone https://gitee.com/gitfox-enter/accel-mirror.git
+```
+
+> 三种方式产出的内容一致（同一版本同一套文件）。拿到仓库后，日常使用与 GitHub 主仓库完全无差别。
+
+---
+
 ## 快速开始
 
 ### 手动测试某个分类
