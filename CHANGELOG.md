@@ -8,6 +8,26 @@
 
 ---
 
+## [Unreleased]
+
+主题：**首次正式 GitHub Release，落地「国内获取方式」（解决“首跳”问题）**。
+本项目本体托管在 GitHub，却恰好在帮人/帮 AI 加速访问 GitHub——为让国内用户拿到第一份
+代码不再被卡在“半墙之上”，新增三路并行的获取渠道。已随 v1.7.0 GitHub Release（tag `v1.7.0`，
+2026-10-10 发布）对外，但版本号语义仍归入下一版，故记在 Unreleased。
+
+### 新增
+- 🌐 **README「国内获取方式」章节**：三路方案——
+  - **方式 A：jsDelivr CDN 直链**。仓库 `dist/` 内置与 Release 一致的正式 tarball 与
+    `SHA256SUMS`，通过 `https://cdn.jsdelivr.net/gh/gitfox-enter/accel-mirror@main/dist/accel-mirror-1.7.0.tar.gz`
+    分发（此前曾尝试让 jsDelivr 代理 codeload tarball，实测 404，废弃该思路）
+  - **方式 B：Release 自举**——`scripts/accel-fetch.sh` 直接下载本 Release 资产，
+    用 accel-mirror 自己加速拿 accel-mirror
+  - **方式 C：Gitee 镜像**（占位“建设中”，待仓库创建后补全地址与徽章）
+- 📦 **`dist/` 目录**：内置 `accel-mirror-1.7.0.tar.gz`（142920B，47 文件，不含 dist 嵌套）与
+  `SHA256SUMS`（92B），随 main 提交维护，供方式 A 分发
+- 🎉 **首个 GitHub Release**：v1.7.0，含 tarball + SHA256SUMS 两个资产；release 主题为国内获取方式
+
+---
 ## [1.7.0] — 2026-09-21
 
 主题：**贡献者入口与项目可信度**。上一版（1.6.0）把众包飞轮做通了，但没有门——陌生人到了仓库
