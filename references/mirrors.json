@@ -1,6 +1,6 @@
 {
   "version": "1.7.0",
-  "last_updated": "2026-11-09",
+  "last_updated": "2026-11-16",
   "last_full_test": "2026-09-21",
   "test_environment": "Home broadband NAS, jishuzhan.net 2025-06-15 community test",
   "scoring": {
@@ -193,6 +193,11 @@
       "date": "2026-11-09",
       "action": "ci_alive_check",
       "details": "CI survival snapshot: 81/121 mirrors responded ok (scores untouched, CI data never writes back scores)"
+    },
+    {
+      "date": "2026-11-16",
+      "action": "ci_alive_check",
+      "details": "CI survival snapshot: 74/121 mirrors responded ok (scores untouched, CI data never writes back scores)"
     }
   ],
   "mirrors": {
@@ -206,7 +211,7 @@
         "test_time_ms": 480,
         "status": "active",
         "notes": "DaoCloud 官方镜像，稳定性较好，未参与2025-06实测",
-        "last_ci_alive": "2026-11-09"
+        "last_ci_alive": "2026-11-16"
       },
       {
         "name": "docker.sparkcr.cn",
@@ -217,7 +222,7 @@
         "test_time_ms": 488,
         "status": "active",
         "notes": "用户原始列表中的源，未测试",
-        "last_ci_alive": "2026-11-09"
+        "last_ci_alive": "2026-11-16"
       },
       {
         "name": "docker.1ms.run",
@@ -228,7 +233,7 @@
         "test_time_ms": 547,
         "status": "active",
         "notes": "用户原始列表中的源",
-        "last_ci_alive": "2026-11-09"
+        "last_ci_alive": "2026-11-16"
       },
       {
         "name": "dockerpull.cn",
@@ -239,7 +244,7 @@
         "test_time_ms": 657,
         "status": "active",
         "notes": "",
-        "last_ci_alive": "2026-11-09"
+        "last_ci_alive": "2026-11-16"
       },
       {
         "name": "hub.rat.dev",
@@ -250,7 +255,7 @@
         "test_time_ms": 828,
         "status": "active",
         "notes": "用户原始列表中的源",
-        "last_ci_alive": "2026-11-09"
+        "last_ci_alive": "2026-11-16"
       },
       {
         "name": "docker.xuanyuan.run",
@@ -261,7 +266,7 @@
         "test_time_ms": 831,
         "status": "active",
         "notes": "轩辕镜像K8s/containerd场景用，与xuanyuan.me同体系",
-        "last_ci_alive": "2026-11-09"
+        "last_ci_alive": "2026-11-16"
       },
       {
         "name": "dockerhub.icu",
@@ -272,7 +277,7 @@
         "test_time_ms": 1115,
         "status": "active",
         "notes": "2026-09-13 测试不可用，已弃用",
-        "last_ci_alive": "2026-11-09"
+        "last_ci_alive": "2026-11-16"
       },
       {
         "name": "docker.apiba.cn",
@@ -283,7 +288,7 @@
         "test_time_ms": 1141,
         "status": "active",
         "notes": "",
-        "last_ci_alive": "2026-11-09"
+        "last_ci_alive": "2026-11-16"
       },
       {
         "name": "docker-0.unsee.tech",
@@ -294,7 +299,7 @@
         "test_time_ms": 1168,
         "status": "active",
         "notes": "用户原始列表中的源",
-        "last_ci_alive": "2026-11-09"
+        "last_ci_alive": "2026-11-16"
       },
       {
         "name": "docker-registry.nmqu.com",
@@ -305,7 +310,7 @@
         "test_time_ms": 1179,
         "status": "active",
         "notes": "",
-        "last_ci_alive": "2026-11-09"
+        "last_ci_alive": "2026-11-16"
       },
       {
         "name": "docker.1panel.top",
@@ -316,7 +321,7 @@
         "test_time_ms": 1321,
         "status": "active",
         "notes": "1panel 系列域名",
-        "last_ci_alive": "2026-11-09"
+        "last_ci_alive": "2026-11-16"
       },
       {
         "name": "docker.kejilion.pro",
@@ -327,7 +332,7 @@
         "test_time_ms": 1351,
         "status": "active",
         "notes": "",
-        "last_ci_alive": "2026-11-09"
+        "last_ci_alive": "2026-11-16"
       },
       {
         "name": "docker.xuanyuan.me",
@@ -348,7 +353,7 @@
         "test_time_ms": 1417,
         "status": "active",
         "notes": "用户原始列表中的源，经典老牌",
-        "last_ci_alive": "2026-11-09"
+        "last_ci_alive": "2026-11-16"
       },
       {
         "name": "docker.367231.xyz",
@@ -359,7 +364,7 @@
         "test_time_ms": 1485,
         "status": "active",
         "notes": "",
-        "last_ci_alive": "2026-11-09"
+        "last_ci_alive": "2026-11-16"
       },
       {
         "name": "hub.1panel.dev",
@@ -370,7 +375,7 @@
         "test_time_ms": 1509,
         "status": "active",
         "notes": "1panel 系列备用域名",
-        "last_ci_alive": "2026-11-09"
+        "last_ci_alive": "2026-11-16"
       },
       {
         "name": "docker.jsdelivr.fyi",
@@ -381,7 +386,7 @@
         "test_time_ms": 1673,
         "status": "active",
         "notes": "",
-        "last_ci_alive": "2026-11-09"
+        "last_ci_alive": "2026-11-16"
       },
       {
         "name": "dockercf.jsdelivr.fyi",
@@ -392,7 +397,7 @@
         "test_time_ms": 1675,
         "status": "active",
         "notes": "",
-        "last_ci_alive": "2026-11-09"
+        "last_ci_alive": "2026-11-16"
       },
       {
         "name": "lispy.org",
@@ -403,7 +408,7 @@
         "test_time_ms": 1751,
         "status": "active",
         "notes": "",
-        "last_ci_alive": "2026-11-09"
+        "last_ci_alive": "2026-11-16"
       },
       {
         "name": "docker.hlmirror.com",
@@ -414,7 +419,7 @@
         "test_time_ms": 2154,
         "status": "active",
         "notes": "",
-        "last_ci_alive": "2026-11-09"
+        "last_ci_alive": "2026-11-16"
       },
       {
         "name": "dockertest.jsdelivr.fyi",
@@ -425,7 +430,7 @@
         "test_time_ms": 2210,
         "status": "active",
         "notes": "",
-        "last_ci_alive": "2026-11-09"
+        "last_ci_alive": "2026-11-16"
       },
       {
         "name": "dytt.online",
@@ -470,7 +475,7 @@
         "status": "active",
         "notes": "",
         "consecutive_failures": 1,
-        "last_ci_alive": "2026-11-09"
+        "last_ci_alive": "2026-11-16"
       },
       {
         "name": "dockerpull.pw",
@@ -616,7 +621,7 @@
         "status": "active",
         "notes": "企业级稳定，免费，无需登录，走国内骨干网。需手动拼路径。",
         "usage": "docker pull swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/<image>:<tag> && docker tag swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/<image>:<tag> <image>:<tag>",
-        "last_ci_alive": "2026-11-09"
+        "last_ci_alive": "2026-11-16"
       },
       {
         "name": "腾讯云 CCS 镜像加速（内网专用）",
@@ -644,7 +649,7 @@
           "访问 http://toolwa.com/github/ 粘贴仓库链接"
         ],
         "test_time_ms": 386,
-        "last_ci_alive": "2026-11-09"
+        "last_ci_alive": "2026-11-16"
       },
       {
         "name": "gh.h233.eu.org",
@@ -675,7 +680,7 @@
           "git clone https://gitclone.com/github.com/user/repo.git"
         ],
         "test_time_ms": 628,
-        "last_ci_alive": "2026-11-09"
+        "last_ci_alive": "2026-11-16"
       },
       {
         "name": "github.akams.cn",
@@ -690,7 +695,7 @@
           "git clone https://github.akams.cn/https://github.com/user/repo.git"
         ],
         "test_time_ms": 642,
-        "last_ci_alive": "2026-11-09"
+        "last_ci_alive": "2026-11-16"
       },
       {
         "name": "gh-proxy.com",
@@ -705,7 +710,7 @@
           "git clone https://gh-proxy.com/https://github.com/user/repo.git"
         ],
         "test_time_ms": 901,
-        "last_ci_alive": "2026-11-09"
+        "last_ci_alive": "2026-11-16"
       },
       {
         "name": "gitproxy.mrhjx.cn",
@@ -734,7 +739,7 @@
           "wget https://gh.monlor.com/https://github.com/user/repo/releases/download/v1.0/file.zip"
         ],
         "test_time_ms": 955,
-        "last_ci_alive": "2026-11-09"
+        "last_ci_alive": "2026-11-16"
       },
       {
         "name": "ghpxy.hwinzniej.top",
@@ -778,7 +783,7 @@
           "git clone https://github.ednovas.xyz/https://github.com/user/repo.git"
         ],
         "test_time_ms": 1143,
-        "last_ci_alive": "2026-11-09"
+        "last_ci_alive": "2026-11-16"
       },
       {
         "name": "gh.jasonzeng.dev",
@@ -807,7 +812,7 @@
           "git clone https://github.limoruirui.com/https://github.com/user/repo.git"
         ],
         "test_time_ms": 1181,
-        "last_ci_alive": "2026-11-09"
+        "last_ci_alive": "2026-11-16"
       },
       {
         "name": "bgithub.xyz",
@@ -838,7 +843,7 @@
           "wget https://gh.con.sh/https://github.com/user/repo/releases/download/v1.0/file.zip"
         ],
         "test_time_ms": 1202,
-        "last_ci_alive": "2026-11-09"
+        "last_ci_alive": "2026-11-16"
       },
       {
         "name": "github.boki.moe",
@@ -882,7 +887,7 @@
           "wget https://cdn.crashmc.com/https://github.com/user/repo/releases/download/v1.0/file.zip"
         ],
         "test_time_ms": 1233,
-        "last_ci_alive": "2026-11-09"
+        "last_ci_alive": "2026-11-16"
       },
       {
         "name": "hub.gitmirror.com",
@@ -912,7 +917,7 @@
           "浏览器访问 https://kkgithub.com/user/repo"
         ],
         "consecutive_failures": 2,
-        "last_ci_alive": "2026-11-09"
+        "last_ci_alive": "2026-11-16"
       },
       {
         "name": "gh.llkk.cc",
@@ -927,7 +932,7 @@
           "git clone https://gh.llkk.cc/https://github.com/user/repo.git"
         ],
         "test_time_ms": 1237,
-        "last_ci_alive": "2026-11-09"
+        "last_ci_alive": "2026-11-16"
       },
       {
         "name": "fastgit.cc",
@@ -942,7 +947,7 @@
           "git clone https://fastgit.cc/user/repo.git"
         ],
         "test_time_ms": 1242,
-        "last_ci_alive": "2026-11-09"
+        "last_ci_alive": "2026-11-16"
       },
       {
         "name": "Ghfast (ghfast.top)",
@@ -958,7 +963,7 @@
           "wget https://ghfast.top/https://github.com/user/repo/releases/download/v1.0/file.zip"
         ],
         "test_time_ms": 1247,
-        "last_ci_alive": "2026-11-09"
+        "last_ci_alive": "2026-11-16"
       },
       {
         "name": "gh.chjina.com",
@@ -1001,7 +1006,7 @@
           "wget https://ghfile.geekertao.top/https://github.com/user/repo/releases/download/v1.0/file.zip"
         ],
         "test_time_ms": 1255,
-        "last_ci_alive": "2026-11-09"
+        "last_ci_alive": "2026-11-16"
       },
       {
         "name": "gh.zwy.one",
@@ -1016,7 +1021,7 @@
           "git clone https://gh.zwy.one/https://github.com/user/repo.git"
         ],
         "test_time_ms": 1273,
-        "last_ci_alive": "2026-11-09"
+        "last_ci_alive": "2026-11-16"
       },
       {
         "name": "ghproxy.cxkpro.top",
@@ -1045,7 +1050,7 @@
           "git clone https://git.yylx.win/https://github.com/user/repo.git"
         ],
         "test_time_ms": 1365,
-        "last_ci_alive": "2026-11-09"
+        "last_ci_alive": "2026-11-16"
       },
       {
         "name": "GhProxy (ghproxy.com)",
@@ -1060,7 +1065,7 @@
           "git clone https://ghproxy.com/https://github.com/user/repo.git"
         ],
         "test_time_ms": 1419,
-        "last_ci_alive": "2026-11-09"
+        "last_ci_alive": "2026-11-16"
       },
       {
         "name": "521github.com",
@@ -1075,7 +1080,7 @@
           "浏览器访问 https://521github.com/user/repo"
         ],
         "test_time_ms": 1436,
-        "last_ci_alive": "2026-11-09"
+        "last_ci_alive": "2026-11-16"
       },
       {
         "name": "gh.nxnow.top",
@@ -1090,7 +1095,7 @@
           "git clone https://gh.nxnow.top/https://github.com/user/repo.git"
         ],
         "test_time_ms": 1489,
-        "last_ci_alive": "2026-11-09"
+        "last_ci_alive": "2026-11-16"
       },
       {
         "name": "ghproxy.monkeyray.net",
@@ -1105,7 +1110,7 @@
           "git clone https://ghproxy.monkeyray.net/https://github.com/user/repo.git"
         ],
         "test_time_ms": 1580,
-        "last_ci_alive": "2026-11-09"
+        "last_ci_alive": "2026-11-16"
       },
       {
         "name": "gh-proxy.net",
@@ -1120,7 +1125,7 @@
           "wget https://gh-proxy.net/https://github.com/user/repo/releases/download/v1.0/file.zip"
         ],
         "test_time_ms": 1634,
-        "last_ci_alive": "2026-11-09"
+        "last_ci_alive": "2026-11-16"
       },
       {
         "name": "moeyy.cn/gh-proxy",
@@ -1150,7 +1155,7 @@
           "wget https://ghproxy.net/https://github.com/user/repo/archive/main.zip"
         ],
         "test_time_ms": 1910,
-        "last_ci_alive": "2026-11-09"
+        "last_ci_alive": "2026-11-16"
       },
       {
         "name": "hub.fastgit.org",
@@ -1194,7 +1199,7 @@
         ],
         "consecutive_failures": 1,
         "test_time_ms": 20656,
-        "last_ci_alive": "2026-11-09"
+        "last_ci_alive": "2026-11-16"
       },
       {
         "name": "Moeyy (github.moeyy.xyz)",
@@ -1238,7 +1243,7 @@
           "wget https://ghproxy.cfd/https://github.com/user/repo/releases/download/v1.0/file.zip"
         ],
         "consecutive_failures": 2,
-        "last_ci_alive": "2026-11-09"
+        "last_ci_alive": "2026-11-16"
       },
       {
         "name": "github.tbedu.top",
@@ -1309,7 +1314,7 @@
         "status": "active",
         "notes": "腾讯云Maven公共仓库镜像",
         "consecutive_failures": 1,
-        "last_ci_alive": "2026-11-09"
+        "last_ci_alive": "2026-11-16"
       },
       {
         "name": "npm 淘宝镜像",
@@ -1321,7 +1326,7 @@
         "notes": "阿里旗下npm镜像，最稳定的npm加速方案",
         "usage": "npm config set registry https://registry.npmmirror.com",
         "test_time_ms": 332,
-        "last_ci_alive": "2026-11-09"
+        "last_ci_alive": "2026-11-16"
       },
       {
         "name": "Composer (阿里)",
@@ -1332,7 +1337,7 @@
         "test_time_ms": 378,
         "status": "active",
         "notes": "阿里云Composer PHP依赖镜像",
-        "last_ci_alive": "2026-11-09"
+        "last_ci_alive": "2026-11-16"
       },
       {
         "name": "Go proxy (阿里)",
@@ -1344,7 +1349,7 @@
         "notes": "阿里Go模块代理",
         "usage": "go env -w GOPROXY=https://goproxy.cn,direct",
         "test_time_ms": 394,
-        "last_ci_alive": "2026-11-09"
+        "last_ci_alive": "2026-11-16"
       },
       {
         "name": "RubyGems (清华)",
@@ -1366,7 +1371,7 @@
         "test_time_ms": 471,
         "status": "active",
         "notes": "腾讯云Gradle发行版镜像",
-        "last_ci_alive": "2026-11-09"
+        "last_ci_alive": "2026-11-16"
       },
       {
         "name": "npm (华为云)",
@@ -1377,7 +1382,7 @@
         "test_time_ms": 481,
         "status": "active",
         "notes": "华为云npm镜像",
-        "last_ci_alive": "2026-11-09"
+        "last_ci_alive": "2026-11-16"
       },
       {
         "name": "apt (阿里)",
@@ -1388,7 +1393,7 @@
         "test_time_ms": 488,
         "status": "active",
         "notes": "阿里云Ubuntu apt镜像",
-        "last_ci_alive": "2026-11-09"
+        "last_ci_alive": "2026-11-16"
       },
       {
         "name": "crates.io (rsproxy)",
@@ -1399,7 +1404,7 @@
         "test_time_ms": 518,
         "status": "active",
         "notes": "字节跳动Rust crates镜像，官方推荐",
-        "last_ci_alive": "2026-11-09"
+        "last_ci_alive": "2026-11-16"
       },
       {
         "name": "清华 GitHub Release 镜像",
@@ -1442,7 +1447,7 @@
         "status": "active",
         "notes": "自动更新GitHub hosts文件的在线服务",
         "test_time_ms": 1322,
-        "last_ci_alive": "2026-11-09"
+        "last_ci_alive": "2026-11-16"
       },
       {
         "name": "dev-sidecar",
@@ -1462,7 +1467,7 @@
         "status": "active",
         "notes": "码云官方镜像库，含thousands+热门开源项目，最稳定的GitHub替代方案。支持git clone。",
         "test_time_ms": 1850,
-        "last_ci_alive": "2026-11-09"
+        "last_ci_alive": "2026-11-16"
       },
       {
         "name": "GitHub520 (hosts方案)",
@@ -1496,7 +1501,7 @@
         "status": "active",
         "notes": "上海人工智能实验室开源平台，书生系列模型与数据集的官方托管地，国内原生源。",
         "usage": "pip install openxlab && openxlab model download --model-repo <org>/<name>",
-        "last_ci_alive": "2026-11-09"
+        "last_ci_alive": "2026-11-16"
       },
       {
         "name": "ModelScope 魔搭",
@@ -1508,7 +1513,7 @@
         "status": "active",
         "notes": "阿里达摩院模型社区。热门模型官方同步，国内原生源，不经过任何代理中间层，大权重优先选它。",
         "usage": "pip install modelscope && modelscope download --model <org>/<name>",
-        "last_ci_alive": "2026-11-09"
+        "last_ci_alive": "2026-11-16"
       },
       {
         "name": "WiseModel 始智AI",
@@ -1519,7 +1524,7 @@
         "test_time_ms": 187,
         "status": "active",
         "notes": "国内开源模型社区，托管大量国产开源权重，可作为 ModelScope 的补充。",
-        "last_ci_alive": "2026-11-09"
+        "last_ci_alive": "2026-11-16"
       },
       {
         "name": "OpenI 启智",
@@ -1530,7 +1535,7 @@
         "test_time_ms": 255,
         "status": "active",
         "notes": "鹏城实验室启智平台（原名 OpenI），托管国产大模型权重，支持 git 拉取。",
-        "last_ci_alive": "2026-11-09"
+        "last_ci_alive": "2026-11-16"
       },
       {
         "name": "BAAI 智源 (FlagOpen)",
@@ -1541,7 +1546,7 @@
         "test_time_ms": 325,
         "status": "active",
         "notes": "北京智源研究院模型仓库，Aquila / Emu / BGE 等系列权重官方发布地。",
-        "last_ci_alive": "2026-11-09"
+        "last_ci_alive": "2026-11-16"
       },
       {
         "name": "hf-mirror (HuggingFace 国内镜像)",
@@ -1553,7 +1558,7 @@
         "status": "active",
         "notes": "HuggingFace 的国内反代，模型与数据集均可下载。环境变量必须在 import transformers 之前设置。",
         "usage": "export HF_ENDPOINT=https://hf-mirror.com",
-        "last_ci_alive": "2026-11-09"
+        "last_ci_alive": "2026-11-16"
       }
     ],
     "python": [
@@ -1567,7 +1572,7 @@
         "status": "active",
         "notes": "上海交大 PyTorch 轮子镜像，作为阿里源的备用。",
         "usage": "pip install torch --index-url https://mirror.sjtu.edu.cn/pytorch-wheels/cu121",
-        "last_ci_alive": "2026-11-09"
+        "last_ci_alive": "2026-11-16"
       },
       {
         "name": "conda (清华)",
@@ -1591,7 +1596,7 @@
         "status": "active",
         "notes": "阿里云 PyTorch 轮子镜像。CUDA 版 torch 体积达 GB 级，走此源可避开 download.pytorch.org。",
         "usage": "pip install torch --index-url https://mirrors.aliyun.com/pytorch-wheels/cu121",
-        "last_ci_alive": "2026-11-09"
+        "last_ci_alive": "2026-11-16"
       },
       {
         "name": "pip 清华镜像",
@@ -1615,7 +1620,7 @@
         "status": "active",
         "notes": "腾讯云 PyPI 镜像",
         "usage": "pip install -i https://mirrors.cloud.tencent.com/pypi/simple <package>",
-        "last_ci_alive": "2026-11-09"
+        "last_ci_alive": "2026-11-16"
       },
       {
         "name": "pypi (阿里)",
@@ -1627,7 +1632,7 @@
         "status": "active",
         "notes": "阿里云PyPI镜像",
         "consecutive_failures": 1,
-        "last_ci_alive": "2026-11-09"
+        "last_ci_alive": "2026-11-16"
       },
       {
         "name": "pip (中科大)",
@@ -1640,7 +1645,7 @@
         "notes": "中科大 PyPI 镜像",
         "usage": "pip install -i https://mirrors.ustc.edu.cn/pypi/simple <package>",
         "consecutive_failures": 1,
-        "last_ci_alive": "2026-11-09"
+        "last_ci_alive": "2026-11-16"
       }
     ],
     "dev_registry": [
@@ -1654,7 +1659,7 @@
         "status": "active",
         "notes": "南京大学开源镜像站的 ghcr.io 镜像",
         "usage": "docker pull ghcr.nju.edu.cn/<owner>/<image>:<tag>",
-        "last_ci_alive": "2026-11-09"
+        "last_ci_alive": "2026-11-16"
       },
       {
         "name": "k8s (阿里云 google_containers)",
@@ -1666,7 +1671,7 @@
         "status": "active",
         "notes": "阿里云同步的 Kubernetes 官方镜像，路径为 google_containers/<image>",
         "usage": "docker pull registry.aliyuncs.com/google_containers/<image>:<tag>",
-        "last_ci_alive": "2026-11-09"
+        "last_ci_alive": "2026-11-16"
       },
       {
         "name": "quay (DaoCloud)",
@@ -1678,7 +1683,7 @@
         "status": "active",
         "notes": "Red Hat Quay 镜像，供 quay.io 使用",
         "usage": "docker pull quay.m.daocloud.io/<org>/<image>:<tag>",
-        "last_ci_alive": "2026-11-09"
+        "last_ci_alive": "2026-11-16"
       },
       {
         "name": "nvcr (DaoCloud)",
@@ -1690,7 +1695,7 @@
         "status": "active",
         "notes": "NVIDIA NGC 镜像（PyTorch/TensorRT 等 AI 训练容器），供 nvcr.io 使用",
         "usage": "docker pull nvcr.m.daocloud.io/<org>/<image>:<tag>",
-        "last_ci_alive": "2026-11-09"
+        "last_ci_alive": "2026-11-16"
       },
       {
         "name": "ghcr (DaoCloud)",
@@ -1702,7 +1707,7 @@
         "status": "active",
         "notes": "GitHub Container Registry 镜像。把镜像名前缀 ghcr.io 换成 ghcr.m.daocloud.io，拉完再 tag 回原名。",
         "usage": "docker pull ghcr.m.daocloud.io/<owner>/<image>:<tag>",
-        "last_ci_alive": "2026-11-09"
+        "last_ci_alive": "2026-11-16"
       },
       {
         "name": "gcr (DaoCloud)",
@@ -1714,7 +1719,7 @@
         "status": "active",
         "notes": "Google Container Registry 镜像，供 gcr.io 使用",
         "usage": "docker pull gcr.m.daocloud.io/<project>/<image>:<tag>",
-        "last_ci_alive": "2026-11-09"
+        "last_ci_alive": "2026-11-16"
       },
       {
         "name": "k8s (DaoCloud)",
@@ -1726,11 +1731,11 @@
         "status": "active",
         "notes": "registry.k8s.io 官方镜像镜像，Kubernetes 集群国内拉取首选",
         "usage": "docker pull k8s.m.daocloud.io/<image>:<tag>",
-        "last_ci_alive": "2026-11-09"
+        "last_ci_alive": "2026-11-16"
       }
     ]
   },
   "mirror_count": 121,
-  "last_ci_test": "2026-11-09",
-  "last_ci_alive_count": 81
+  "last_ci_test": "2026-11-16",
+  "last_ci_alive_count": 74
 }
